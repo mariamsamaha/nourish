@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:proj/routes/app_routes.dart';
 
 class CreateAccountScreen extends StatefulWidget {
   const CreateAccountScreen({super.key});
@@ -43,21 +44,33 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 // Top icon + title
                 Row(
                   children: [
-                    Container(
-                      padding: EdgeInsets.all(width * 0.03),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade100,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(Icons.eco, color: Colors.green, size: 28),
+                  Container(
+                     padding: EdgeInsets.all(width * 0.03),
+                     decoration: BoxDecoration(
+                     color: Colors.green.shade100,
+                     borderRadius: BorderRadius.circular(12),
+                     ),
+                     child: const Icon(Icons.eco, color: Colors.green, size: 28),
+                     ),
+
+                  SizedBox(width: width * 0.03),
+
+                  const Text(
+                   "Create Account",
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                     ),
-                    SizedBox(width: width * 0.03),
-                    const Text(
-                      "Create Account",
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                    ),
-                  ],
+
+                    Spacer(),
+
+                   IconButton(
+                      icon: const Icon(Icons.settings, size: 28, color: Colors.grey),
+                      onPressed: () {
+                      Navigator.pushNamed(context, AppRoutes.settings);
+                    },
+              
                 ),
+                  ],
+                    ),
 
                 SizedBox(height: height * 0.04),
 
