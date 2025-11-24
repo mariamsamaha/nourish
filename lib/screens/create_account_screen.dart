@@ -176,6 +176,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             ),
                           ),
                         );
+                        // Navigate to Impact Screen
+                        Navigator.pushNamed(context, AppRoutes.impact);
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -198,7 +200,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                     const Text("Already have an account? "),
                     GestureDetector(
                       onTap: () {
-                        Navigator.pop(context);
+                        Navigator.pushNamed(context, AppRoutes.signin);
                       },
                       child: const Text(
                         "Sign In",

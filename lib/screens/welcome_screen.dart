@@ -116,7 +116,6 @@ class WelcomeScreen extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.pushNamed(context, AppRoutes.signup);
-
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
@@ -139,7 +138,9 @@ class WelcomeScreen extends StatelessWidget {
                   width: width * 0.7,
                   height: height * 0.065,
                   child: OutlinedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pushNamed(context, AppRoutes.signin);
+                    },
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(color: Colors.white.withOpacity(0.4)),
                       shape: RoundedRectangleBorder(
