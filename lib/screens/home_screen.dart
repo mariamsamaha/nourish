@@ -3,6 +3,7 @@ import 'package:proj/widgets/custom_bottom_nav_bar.dart';
 import 'package:proj/widgets/home_app_bar.dart';
 import 'package:proj/widgets/impact_card.dart';
 import 'package:proj/widgets/offer_card.dart';
+import 'package:proj/routes/app_routes.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,6 +19,11 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _currentIndex = index;
     });
+    
+    // Handle navigation for Browse tab
+    if (index == 1) {
+      Navigator.pushNamed(context, AppRoutes.browseRestaurants);
+    }
   }
 
   @override

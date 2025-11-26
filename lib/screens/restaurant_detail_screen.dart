@@ -1,0 +1,413 @@
+import 'package:flutter/material.dart';
+import 'package:proj/routes/app_routes.dart';
+
+class RestaurantDetailScreen extends StatelessWidget {
+  const RestaurantDetailScreen({super.key});
+
+  static const _green = Color(0xFF1B5E20);
+  static const _lightGreen = Color(0xFFE8F5E9);
+  static const _mediumGreen = Color(0xFF4CAF50);
+
+  @override
+  Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)!.settings.arguments as Map?;
+
+    final String name = args?['name'] ?? 'Restaurant';
+    final double rating = args?['rating'] ?? 0.0;
+    final int reviews = args?['reviews'] ?? 0;
+    final List tags = args?['tags'] ?? [];
+    final String image = args?['image'] ??
+        'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800';
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF0F8F0),
+      body: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          _buildHeader(context, image),
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildRestaurantInfo(
+                  name: name,
+                  rating: rating,
+                  reviews: reviews,
+                  tags: tags,
+                ),
+                const SizedBox(height: 32),
+                _buildSection(
+                  'About',
+                  'Family-owned artisan bakery serving fresh bread, pastries, and cakes since 1995. We believe in quality ingredients and traditional baking methods.',
+                ),
+                const SizedBox(height: 32),
+                const Text(
+                  'Available Items',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: _green,
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+          ..._buildItems(context),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, String image) {
+    return Stack(
+      children: [
+        Image.network(
+          image,
+          height: 400,
+          width: double.infinity,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Container(
+            height: 400,
+            color: _lightGreen,
+            child: const Icon(Icons.restaurant, size: 100, color: _mediumGreen),
+          ),
+        ),
+
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _iconButton(Icons.arrow_back, () => Navigator.pop(context)),
+                Row(
+                  children: [
+                    _iconButton(
+                      Icons.share_outlined,
+                      () => _showSnack(context, 'Share feature coming soon!'),
+                    ),
+                    const SizedBox(width: 12),
+                    _iconButton(
+                      Icons.favorite_border,
+                      () => _showSnack(context, 'Added to favorites!'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRestaurantInfo({
+    required String name,
+    required double rating,
+    required int reviews,
+    required List tags,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          name,
+          style: const TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: _green,
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        Row(
+          children: [
+            const Icon(Icons.star, color: Colors.amber, size: 20),
+            const SizedBox(width: 4),
+            Text(
+              '$rating ',
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold, fontSize: 16, color: _green),
+            ),
+            Text(
+              '($reviews reviews)',
+              style: TextStyle(color: Colors.grey[600], fontSize: 16),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 16),
+        _infoRow(Icons.location_on_outlined, '123 Main Street, San Francisco, CA'),
+        const SizedBox(height: 12),
+        _infoRow(Icons.access_time, 'Open today: 7:00 AM - 9:00 PM'),
+        const SizedBox(height: 12),
+        _infoRow(Icons.phone_outlined, '(415) 555-0123'),
+        const SizedBox(height: 20),
+
+        // Tags
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: tags.map((t) => _tag(t.toString())).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSection(String title, String content) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: _green,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          content,
+          style: TextStyle(
+            color: Colors.grey[700],
+            fontSize: 15,
+            height: 1.5,
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildItems(BuildContext context) {
+    final items = [
+      ('Fresh Bakery Surprise Bag', 'Assorted pastries and bread', 4.99, 15.00,
+          67, true),
+      ('Sourdough Bread Pack', '2 loaves of artisan sourdough', 6.99, 18.00, 61,
+          false),
+      ('Pastry Box', 'Selection of 6 pastries', 7.99, 22.00, 64, false),
+    ];
+
+    return items
+        .map(
+          (item) => Padding(
+            padding: const EdgeInsets.only(bottom: 16, left: 24, right: 24),
+            child: _itemCard(
+              item.$1,
+              item.$2,
+              item.$3,
+              item.$4,
+              item.$5,
+              item.$6,
+              context,
+            ),
+          ),
+        )
+        .toList();
+  }
+
+  Widget _itemCard(String title, String desc, double price, double original,
+      int discount, bool filled, BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border:
+            Border.all(color: const Color(0xFFA5D6A7).withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: _lightGreen,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.bakery_dining,
+                    size: 50, color: _mediumGreen),
+              ),
+              const SizedBox(width: 16),
+
+              // Text content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color: _green),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      desc,
+                      style: TextStyle(
+                          color: Colors.grey[600], fontSize: 14),
+                    ),
+                    const SizedBox(height: 8),
+
+                    Row(
+                      children: [
+                        Text(
+                          '\$$price',
+                          style: const TextStyle(
+                            color: _mediumGreen,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '\$$original',
+                          style: TextStyle(
+                            color: Colors.grey[400],
+                            fontSize: 14,
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _mediumGreen,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '$discount% off',
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 8),
+                    Row(
+                      children: const [
+                        Icon(Icons.access_time,
+                            size: 14, color: Color(0xFF2E7D32)),
+                        SizedBox(width: 4),
+                        Text(
+                          'Pick up: 7:00 - 9:00 PM',
+                          style: TextStyle(
+                            color: Color(0xFF2E7D32),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () =>
+                  Navigator.pushNamed(context, AppRoutes.foodDetails),
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    filled ? _mediumGreen : Colors.white,
+                foregroundColor:
+                    filled ? Colors.white : _mediumGreen,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: filled
+                      ? BorderSide.none
+                      : const BorderSide(color: _mediumGreen, width: 2),
+                ),
+                elevation: 0,
+              ),
+              child: const Text(
+                'Add to Cart',
+                style:
+                    TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _iconButton(IconData icon, VoidCallback onTap) => GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              )
+            ],
+          ),
+          child: Icon(icon, size: 24, color: _green),
+        ),
+      );
+
+  Widget _infoRow(IconData icon, String text) => Row(
+        children: [
+          Icon(icon, size: 20, color: const Color(0xFF2E7D32)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style:
+                  TextStyle(color: Colors.grey[700], fontSize: 15),
+            ),
+          ),
+        ],
+      );
+
+  Widget _tag(String text) => Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          border: Border.all(
+              color: const Color(0xFFA5D6A7).withOpacity(0.5)),
+          borderRadius: BorderRadius.circular(20),
+          color: _lightGreen.withOpacity(0.5),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(
+              fontSize: 13, color: Color(0xFF2E7D32)),
+        ),
+      );
+
+  void _showSnack(BuildContext context, String msg) =>
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: _mediumGreen,
+        ),
+      );
+}
