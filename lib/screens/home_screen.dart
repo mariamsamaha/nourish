@@ -24,6 +24,12 @@ class _HomeScreenState extends State<HomeScreen> {
     if (index == 1) {
       Navigator.pushNamed(context, AppRoutes.browseRestaurants);
     }
+    if (index == 3) {
+      Navigator.pushNamed(context, AppRoutes.charity);
+    }
+    if (index == 4) {
+      Navigator.pushNamed(context, AppRoutes.profile);
+    }
   }
 
   @override

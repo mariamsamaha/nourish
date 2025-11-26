@@ -172,7 +172,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              "Account Created Successfully with ${_selectedCountryCode}${_phoneController.text}",
+                              "Account Created Successfully with $_selectedCountryCode${_phoneController.text}",
                             ),
                           ),
                         );

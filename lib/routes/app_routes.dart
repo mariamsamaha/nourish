@@ -9,6 +9,8 @@ import 'package:proj/screens/impact_screen.dart';
 import 'package:proj/screens/home_screen.dart';
 import 'package:proj/screens/browse_restaurants_screen.dart';
 import 'package:proj/screens/restaurant_detail_screen.dart';
+import 'package:proj/screens/charity_screen.dart';
+import 'package:proj/screens/profile_screen.dart';
 
 class AppRoutes {
   static const String welcome = '/';
@@ -21,6 +23,8 @@ class AppRoutes {
   static const String home = '/home';
   static const String browseRestaurants = '/browse_restaurants';
   static const String restaurantDetail = '/restaurant_detail';
+  static const String charity = '/charity';
+  static const String profile = '/profile';
 
   static Map<String, WidgetBuilder> routes = {
     welcome: (context) => const WelcomeScreen(),
@@ -33,5 +37,7 @@ class AppRoutes {
     home: (context) => const HomeScreen(),
     browseRestaurants: (context) => const BrowseRestaurantsScreen(),
     restaurantDetail: (context) => const RestaurantDetailScreen(),
+    charity: (context) => const CharityScreen(),
+    profile: (context) => const ProfileScreen(),
   };
 }
