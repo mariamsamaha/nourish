@@ -4,6 +4,7 @@ import 'package:proj/widgets/home_app_bar.dart';
 import 'package:proj/widgets/impact_card.dart';
 import 'package:proj/widgets/offer_card.dart';
 import 'package:proj/routes/app_routes.dart';
+import 'package:proj/screens/impact_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,6 +17,15 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
   void _onNavTap(int index) {
+    // Navigate to Impact Screen when Impact button (index 2) is tapped
+    if (index == 2) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const ImpactScreen()),
+      );
+      return;
+    }
+
     setState(() {
       _currentIndex = index;
     });
