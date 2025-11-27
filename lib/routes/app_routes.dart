@@ -11,6 +11,7 @@ import 'package:proj/screens/browse_restaurants_screen.dart';
 import 'package:proj/screens/restaurant_detail_screen.dart';
 import 'package:proj/screens/charity_screen.dart';
 import 'package:proj/screens/profile_screen.dart';
+import 'package:proj/screens/subscription_screen.dart';
 
 class AppRoutes {
   static const String welcome = '/';
@@ -25,6 +26,7 @@ class AppRoutes {
   static const String restaurantDetail = '/restaurant_detail';
   static const String charity = '/charity';
   static const String profile = '/profile';
+  static const String subscription = '/subscription';
 
   static Map<String, WidgetBuilder> routes = {
     welcome: (context) => const WelcomeScreen(),
@@ -39,5 +41,6 @@ class AppRoutes {
     restaurantDetail: (context) => const RestaurantDetailScreen(),
     charity: (context) => const CharityScreen(),
     profile: (context) => const ProfileScreen(),
+    subscription: (context) => const SubscriptionScreen(),
   };
 }
