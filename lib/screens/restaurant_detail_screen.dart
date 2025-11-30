@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:proj/routes/app_routes.dart';
+import 'package:proj/services/firestore_service.dart';
+import 'package:proj/models/food_item_model.dart';
 
 class RestaurantDetailScreen extends StatelessWidget {
   const RestaurantDetailScreen({super.key});
@@ -12,15 +15,19 @@ class RestaurantDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments as Map?;
 
+    // In a real app, we'd pass the ID and fetch fresh details.
+    // For now, we use the passed arguments for the restaurant info
+    // and fetch the menu items from Firestore.
+    final String restaurantId = args?['id'] ?? 'r1'; // Default ID for testing
     final String name = args?['name'] ?? 'Restaurant';
-    final double rating = args?['rating'] ?? 0.0;
+    final double rating = (args?['rating'] ?? 0.0).toDouble();
     final int reviews = args?['reviews'] ?? 0;
     final List tags = args?['tags'] ?? [];
     final String image = args?['image'] ??
         'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F8F0),
+      backgroundColor: const Color(0xFFF5F7FA), // Match home screen
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
@@ -54,7 +61,46 @@ class RestaurantDetailScreen extends StatelessWidget {
               ],
             ),
           ),
-          ..._buildItems(context),
+          
+          // Real Menu Data from Firestore
+          StreamBuilder<List<FoodItem>>(
+            stream: Provider.of<FirestoreService>(context).getFoodItemsByRestaurant(restaurantId),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text('Error loading menu: ${snapshot.error}'),
+                );
+              }
+
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final items = snapshot.data ?? [];
+
+              if (items.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.all(24.0),
+                  child: Text('No items available right now.'),
+                );
+              }
+
+              return Column(
+                children: items.map((item) {
+                  final discount = ((item.originalPrice - item.price) / item.originalPrice * 100).round();
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16, left: 24, right: 24),
+                    child: _itemCard(
+                      item,
+                      discount,
+                      context,
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
           const SizedBox(height: 24),
         ],
       ),
@@ -83,18 +129,9 @@ class RestaurantDetailScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _iconButton(Icons.arrow_back, () => Navigator.pop(context)),
-                Row(
-                  children: [
-                    _iconButton(
-                      Icons.share_outlined,
-                      () => _showSnack(context, 'Share feature coming soon!'),
-                    ),
-                    const SizedBox(width: 12),
-                    _iconButton(
-                      Icons.favorite_border,
-                      () => _showSnack(context, 'Added to favorites!'),
-                    ),
-                  ],
+                _iconButton(
+                  Icons.favorite_border,
+                  () => _showSnack(context, 'Added to favorites!'),
                 ),
               ],
             ),
@@ -182,35 +219,7 @@ class RestaurantDetailScreen extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildItems(BuildContext context) {
-    final items = [
-      ('Fresh Bakery Surprise Bag', 'Assorted pastries and bread', 4.99, 15.00,
-          67, true),
-      ('Sourdough Bread Pack', '2 loaves of artisan sourdough', 6.99, 18.00, 61,
-          false),
-      ('Pastry Box', 'Selection of 6 pastries', 7.99, 22.00, 64, false),
-    ];
-
-    return items
-        .map(
-          (item) => Padding(
-            padding: const EdgeInsets.only(bottom: 16, left: 24, right: 24),
-            child: _itemCard(
-              item.$1,
-              item.$2,
-              item.$3,
-              item.$4,
-              item.$5,
-              item.$6,
-              context,
-            ),
-          ),
-        )
-        .toList();
-  }
-
-  Widget _itemCard(String title, String desc, double price, double original,
-      int discount, bool filled, BuildContext context) {
+  Widget _itemCard(FoodItem item, int discount, BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -236,6 +245,7 @@ class RestaurantDetailScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: _lightGreen,
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: _mediumGreen.withOpacity(0.2)),
                 ),
                 child: const Icon(Icons.bakery_dining,
                     size: 50, color: _mediumGreen),
@@ -248,7 +258,7 @@ class RestaurantDetailScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
+                      item.name,
                       style: const TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.bold,
@@ -256,7 +266,7 @@ class RestaurantDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      desc,
+                      'Delicious surprise bag',
                       style: TextStyle(
                           color: Colors.grey[600], fontSize: 14),
                     ),
@@ -265,7 +275,7 @@ class RestaurantDetailScreen extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          '\$$price',
+                          '\$${item.price.toStringAsFixed(2)}',
                           style: const TextStyle(
                             color: _mediumGreen,
                             fontSize: 18,
@@ -274,7 +284,7 @@ class RestaurantDetailScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '\$$original',
+                          '\$${item.originalPrice.toStringAsFixed(2)}',
                           style: TextStyle(
                             color: Colors.grey[400],
                             fontSize: 14,
@@ -302,13 +312,13 @@ class RestaurantDetailScreen extends StatelessWidget {
 
                     const SizedBox(height: 8),
                     Row(
-                      children: const [
-                        Icon(Icons.access_time,
+                      children: [
+                        const Icon(Icons.access_time,
                             size: 14, color: Color(0xFF2E7D32)),
-                        SizedBox(width: 4),
+                        const SizedBox(width: 4),
                         Text(
-                          'Pick up: 7:00 - 9:00 PM',
-                          style: TextStyle(
+                          'Pick up: ${item.pickupTime}',
+                          style: const TextStyle(
                             color: Color(0xFF2E7D32),
                             fontSize: 13,
                           ),
@@ -326,17 +336,28 @@ class RestaurantDetailScreen extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () =>
-                  Navigator.pushNamed(context, AppRoutes.foodDetails),
+              onPressed: () => Navigator.pushNamed(
+                context,
+                AppRoutes.foodDetails,
+                arguments: {
+                  'name': item.name,
+                  'price': item.price,
+                  'originalPrice': item.originalPrice,
+                  'quantity': item.quantity,
+                  'pickupTime': item.pickupTime,
+                  'imageUrl': item.imageUrl,
+                  'allergens': item.allergens,
+                },
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor:
-                    filled ? _mediumGreen : Colors.white,
+                    item.quantity > 0 ? _mediumGreen : Colors.white,
                 foregroundColor:
-                    filled ? Colors.white : _mediumGreen,
+                    item.quantity > 0 ? Colors.white : _mediumGreen,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  side: filled
+                  side: item.quantity > 0
                       ? BorderSide.none
                       : const BorderSide(color: _mediumGreen, width: 2),
                 ),

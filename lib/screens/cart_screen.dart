@@ -32,7 +32,7 @@ class _CartScreenState extends State<CartScreen> {
     final width = size.width;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F8F0),
+      backgroundColor: const Color(0xFFF5F7FA), // Match home screen
       appBar: AppBar(
         title: const Text(
           'Cart',

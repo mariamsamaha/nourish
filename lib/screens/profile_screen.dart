@@ -1,12 +1,61 @@
 import 'package:flutter/material.dart';
+import 'package:proj/widgets/custom_bottom_nav_bar.dart';
+import 'package:proj/routes/app_routes.dart';
+import 'package:proj/services/data_seeder.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  int _currentIndex = 3; // Profile is index 3
+
+  void _onNavTap(int index) {
+    if (index == _currentIndex) return; // Already on this screen
+    
+    setState(() {
+      _currentIndex = index;
+    });
+
+    // Navigate to other screens
+    if (index == 0) {
+      Navigator.pushNamed(context, AppRoutes.home);
+    } else if (index == 1) {
+      Navigator.pushNamed(context, AppRoutes.browseRestaurants);
+    } else if (index == 2) {
+      Navigator.pushNamed(context, AppRoutes.charity);
+    }
+  }
+
+  Future<void> _seedDatabase(BuildContext context) async {
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('🌱 Seeding database... Please wait.')),
+      );
+      
+      await DataSeeder.seed();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('✅ Database seeded successfully! Restart app to see changes.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('❌ Error seeding database: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF5F7FA), // Match home screen
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -23,8 +72,6 @@ class ProfileScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: const [
                     SizedBox(height: 8),
-                    SubscriptionCard(),
-                    SizedBox(height: 16),
                     _SectionTitle(title: 'Account'),
                     SizedBox(height: 8),
                   ],
@@ -61,7 +108,6 @@ class ProfileScreen extends StatelessWidget {
                 child: SectionCard(
                   items: [
                     SectionItem(icon: Icons.favorite, label: 'Favorite Restaurants', background: Colors.red.shade50, iconColor: Colors.red.shade600),
-                    SectionItem(icon: Icons.notifications, label: 'Notifications', background: Colors.orange.shade50, iconColor: Colors.orange.shade600),
                     SectionItem(icon: Icons.settings, label: 'App Settings', background: Colors.grey.shade50, iconColor: Colors.grey.shade600),
                   ],
                 ),
@@ -85,6 +131,33 @@ class ProfileScreen extends StatelessWidget {
                     SectionItem(icon: Icons.help_outline, label: 'Help Center', background: Colors.cyan.shade50, iconColor: Colors.cyan.shade600),
                     SectionItem(icon: null, label: 'About Nourish', background: null, iconColor: null),
                     SectionItem(icon: null, label: 'Terms & Privacy', background: null, iconColor: null),
+                  ],
+                ),
+              ),
+            ),
+
+            SliverToBoxAdapter(child: const SizedBox(height: 20)),
+
+            // Developer Tools
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const _SectionTitle(title: 'Developer Tools'),
+                    const SizedBox(height: 8),
+                    SectionCard(
+                      items: [
+                        SectionItem(
+                          icon: Icons.cloud_upload,
+                          label: 'Seed Database',
+                          background: Colors.orange.shade50,
+                          iconColor: Colors.orange.shade600,
+                        ),
+                      ],
+                      onTap: (index) => _seedDatabase(context),
+                    ),
                   ],
                 ),
               ),
@@ -119,6 +192,10 @@ class ProfileScreen extends StatelessWidget {
             SliverToBoxAdapter(child: const SizedBox(height: 24)),
           ],
         ),
+      ),
+      bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: _currentIndex,
+        onTap: _onNavTap,
       ),
     );
   }
@@ -196,7 +273,6 @@ class _ProfileHeader extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: const [
                 StatTile(value: '127', label: 'Meals'),
-                StatTile(value: '\$892', label: 'Saved'),
                 StatTile(value: '89kg', label: 'CO₂'),
               ],
             ),
@@ -235,106 +311,12 @@ class StatTile extends StatelessWidget {
   }
 }
 
-class SubscriptionCard extends StatelessWidget {
-  const SubscriptionCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final Color accent = Colors.purple.shade500;
-
-    return Card(
-      clipBehavior: Clip.hardEdge,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 6,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(colors: [accent, Colors.pink.shade500, Colors.orange.shade400]),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.auto_awesome, color: Colors.white),
-                      const SizedBox(width: 8),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text('Nourish Plus', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
-                          SizedBox(height: 2),
-                          Text('Monthly Plan', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text('Active', style: TextStyle(color: Colors.white)),
-                  )
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white.withOpacity(0.06)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text('Remaining this month', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                    SizedBox(height: 6),
-                    Text('18 meals', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: OutlinedButton(
-                  onPressed: () {},
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.white.withOpacity(0.14)),
-                    backgroundColor: Colors.white.withOpacity(0.04),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Text('Manage Subscription', style: TextStyle(color: Colors.white)),
-                      SizedBox(width: 8),
-                      Icon(Icons.chevron_right, color: Colors.white),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class SectionCard extends StatelessWidget {
   final List<SectionItem> items;
-  const SectionCard({super.key, required this.items});
+  final Function(int index)? onTap; // Add onTap callback
+
+  const SectionCard({super.key, required this.items, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -348,7 +330,11 @@ class SectionCard extends StatelessWidget {
 
           final item = items[rowIndex];
           return InkWell(
-            onTap: () {},
+            onTap: () {
+              if (onTap != null) {
+                onTap!(rowIndex);
+              }
+            },
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               child: Row(

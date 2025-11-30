@@ -11,6 +11,9 @@ class OfferCard extends StatelessWidget {
   final Color imageColor;
   final IconData icon;
   final String discountPercent;
+  final String? restaurantId;
+  final String? restaurantName;
+  final Map<String, dynamic>? foodItemData;
 
   const OfferCard({
     super.key,
@@ -24,25 +27,38 @@ class OfferCard extends StatelessWidget {
     required this.imageColor,
     required this.icon,
     required this.discountPercent,
+    this.restaurantId,
+    this.restaurantName,
+    this.foodItemData,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
+    return GestureDetector(
+      onTap: () {
+        if (foodItemData != null) {
+          Navigator.pushNamed(
+            context,
+            '/food_details',
+            arguments: foodItemData,
+          );
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
         children: [
           // Image / Icon Section
           Stack(
@@ -155,10 +171,11 @@ class OfferCard extends StatelessWidget {
                     _buildTag(null, quantityLeft, const Color(0xFFE8F5E9), const Color(0xFF4CAF50)),
                   ],
                 ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

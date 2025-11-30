@@ -9,8 +9,19 @@ class FoodDetailsScreen extends StatelessWidget {
     final height = size.height;
     final width = size.width;
 
+    // Extract arguments
+    final args = ModalRoute.of(context)!.settings.arguments as Map?;
+    final String name = args?['name'] ?? 'Surprise Bag';
+    final double price = (args?['price'] ?? 4.99).toDouble();
+    final double originalPrice = (args?['originalPrice'] ?? 15.00).toDouble();
+    final int quantity = args?['quantity'] ?? 0;
+    final String pickupTime = args?['pickupTime'] ?? 'Today';
+    final String imageUrl = args?['imageUrl'] ?? '';
+    
+    final int discountPercent = ((originalPrice - price) / originalPrice * 100).round();
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F8F0),
+      backgroundColor: const Color(0xFFF5F7FA), // Match home screen
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -45,13 +56,21 @@ class FoodDetailsScreen extends StatelessWidget {
                         offset: const Offset(0, 4),
                       ),
                     ],
+                    image: imageUrl.isNotEmpty
+                        ? DecorationImage(
+                            image: NetworkImage(imageUrl),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
                   ),
-                  child: const Center(
-                    child: Text(
-                      '🥐',
-                      style: TextStyle(fontSize: 80),
-                    ),
-                  ),
+                  child: imageUrl.isEmpty
+                      ? const Center(
+                          child: Text(
+                            '🥐',
+                            style: TextStyle(fontSize: 80),
+                          ),
+                        )
+                      : null,
                 ),
               ),
 
@@ -70,9 +89,9 @@ class FoodDetailsScreen extends StatelessWidget {
                         color: const Color(0xFF4CAF50),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Text(
-                        'Save 67%',
-                        style: TextStyle(
+                      child: Text(
+                        'Save $discountPercent%',
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -86,18 +105,18 @@ class FoodDetailsScreen extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text(
-                          '\$4.99',
-                          style: TextStyle(
+                        Text(
+                          '\$${price.toStringAsFixed(2)}',
+                          style: const TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF1B5E20),
                           ),
                         ),
                         SizedBox(width: width * 0.03),
-                        const Text(
-                          '\$15.00',
-                          style: TextStyle(
+                        Text(
+                          '\$${originalPrice.toStringAsFixed(2)}',
+                          style: const TextStyle(
                             fontSize: 18,
                             color: Colors.grey,
                             decoration: TextDecoration.lineThrough,
@@ -109,9 +128,9 @@ class FoodDetailsScreen extends StatelessWidget {
                     SizedBox(height: height * 0.015),
 
                     // Title
-                    const Text(
-                      'Fresh Bakery Surprise Bag',
-                      style: TextStyle(
+                    Text(
+                      name,
+                      style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1B5E20),
@@ -120,11 +139,11 @@ class FoodDetailsScreen extends StatelessWidget {
 
                     SizedBox(height: height * 0.01),
 
-                    // Restaurant name
+                    // Restaurant name (Placeholder for now, could be passed in args)
                     Row(
                       children: [
                         const Text(
-                          'Artisan Bakery',
+                          'Restaurant', 
                           style: TextStyle(
                             fontSize: 16,
                             color: Color(0xFF2E7D32),
@@ -181,9 +200,9 @@ class FoodDetailsScreen extends StatelessWidget {
                     SizedBox(height: height * 0.015),
 
                     // Stock info
-                    const Text(
-                      '3 Left',
-                      style: TextStyle(
+                    Text(
+                      '$quantity Left',
+                      style: const TextStyle(
                         fontSize: 16,
                         color: Colors.red,
                         fontWeight: FontWeight.w600,
@@ -196,7 +215,7 @@ class FoodDetailsScreen extends StatelessWidget {
                     _buildInfoCard(
                       icon: Icons.access_time,
                       title: 'Pick-up Time',
-                      subtitle: '7:00 - 9:00 PM',
+                      subtitle: pickupTime,
                       trailing: 'Today',
                     ),
 
@@ -231,62 +250,6 @@ class FoodDetailsScreen extends StatelessWidget {
                       ),
                     ),
 
-                    SizedBox(height: height * 0.03),
-
-                    // Environmental Impact
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: const Color(0xFFA5D6A7).withOpacity(0.3),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.eco,
-                                color: Color(0xFF4CAF50),
-                                size: 24,
-                              ),
-                              const SizedBox(width: 8),
-                              const Text(
-                                'Environmental Impact',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1B5E20),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            "By saving this bag, you'll help prevent:",
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF2E7D32),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildImpactMetric('0.7kg', 'CO₂ Emissions'),
-                              ),
-                              SizedBox(width: width * 0.04),
-                              Expanded(
-                                child: _buildImpactMetric('1.2kg', 'Food Waste'),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
 
                     SizedBox(height: height * 0.03),
 
@@ -421,37 +384,6 @@ class FoodDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildImpactMetric(String value, String label) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8F5E9),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1B5E20),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF2E7D32),
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildAllergenItem(String emoji, String text) {
     return Row(
       children: [
@@ -468,4 +400,3 @@ class FoodDetailsScreen extends StatelessWidget {
     );
   }
 }
-

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:proj/widgets/custom_bottom_nav_bar.dart';
 import 'package:proj/widgets/home_app_bar.dart';
-import 'package:proj/widgets/impact_card.dart';
 import 'package:proj/widgets/offer_card.dart';
 import 'package:proj/routes/app_routes.dart';
-import 'package:proj/screens/impact_screen.dart';
+import 'package:proj/services/firestore_service.dart';
+import 'package:proj/models/food_item_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,17 +16,16 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   void _onNavTap(int index) {
-    // Navigate to Impact Screen when Impact button (index 2) is tapped
-    if (index == 2) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const ImpactScreen()),
-      );
-      return;
-    }
-
     setState(() {
       _currentIndex = index;
     });
@@ -34,10 +34,10 @@ class _HomeScreenState extends State<HomeScreen> {
     if (index == 1) {
       Navigator.pushNamed(context, AppRoutes.browseRestaurants);
     }
-    if (index == 3) {
+    if (index == 2) {
       Navigator.pushNamed(context, AppRoutes.charity);
     }
-    if (index == 4) {
+    if (index == 3) {
       Navigator.pushNamed(context, AppRoutes.profile);
     }
   }
@@ -74,6 +74,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                         child: TextField(
+                          controller: _searchController,
+                          onChanged: (value) {
+                            setState(() {
+                              _searchQuery = value.toLowerCase();
+                            });
+                          },
                           decoration: InputDecoration(
                             hintText: "Search for food or restaurants...",
                             hintStyle: TextStyle(color: Colors.grey.shade400),
@@ -87,11 +93,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     const SizedBox(height: 24),
 
-                    // Impact Card
-                    const ImpactCard(),
-
-                    const SizedBox(height: 24),
-
                     // "Available Now" Section
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -99,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            "Available Now",
+                            "Best Offers",
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -120,48 +121,73 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     const SizedBox(height: 16),
 
-                    // Offer Cards List
+                    // Offer Cards List (Best Offers - Highest Discounts)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: Column(
-                        children: [
-                          OfferCard(
-                            title: "Bakery Surprise Bag",
-                            storeName: "Artisan Bakery",
-                            distance: "0.3 mi",
-                            originalPrice: "\$15.00",
-                            discountedPrice: "\$4.99",
-                            pickupTime: "7-9 PM",
-                            quantityLeft: "3 left",
-                            imageColor: Colors.orange.shade400,
-                            icon: Icons.bakery_dining,
-                            discountPercent: "67% OFF",
-                          ),
-                          OfferCard(
-                            title: "Gourmet Pizza Box",
-                            storeName: "Bella Italia",
-                            distance: "0.5 mi",
-                            originalPrice: "\$25.00",
-                            discountedPrice: "\$8.99",
-                            pickupTime: "8-10 PM",
-                            quantityLeft: "5 left",
-                            imageColor: Colors.red.shade400,
-                            icon: Icons.local_pizza,
-                            discountPercent: "64% OFF",
-                          ),
-                          OfferCard(
-                            title: "Sushi Combo Pack",
-                            storeName: "Tokyo Express",
-                            distance: "1.2 mi",
-                            originalPrice: "\$35.00",
-                            discountedPrice: "\$12.99",
-                            pickupTime: "9-10 PM",
-                            quantityLeft: "2 left",
-                            imageColor: Colors.blue.shade400,
-                            icon: Icons.set_meal,
-                            discountPercent: "63% OFF",
-                          ),
-                        ],
+                      child: StreamBuilder<List<FoodItem>>(
+                        stream: Provider.of<FirestoreService>(context).getBestOffers(limit: 5),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasError) {
+                            return Center(child: Text('Error: ${snapshot.error}'));
+                          }
+
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(child: CircularProgressIndicator());
+                          }
+
+                          final foodItems = snapshot.data ?? [];
+
+                          // Filter food items based on search query
+                          final filteredItems = _searchQuery.isEmpty
+                              ? foodItems
+                              : foodItems.where((item) {
+                                  return item.name.toLowerCase().contains(_searchQuery) ||
+                                         (item.restaurantName?.toLowerCase().contains(_searchQuery) ?? false);
+                                }).toList();
+
+                          if (filteredItems.isEmpty) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(20.0),
+                                child: Text('No surprise bags available right now.'),
+                              ),
+                            );
+                          }
+
+                          return Column(
+                            children: filteredItems.map((item) {
+                              // Calculate discount percent
+                              final discount = ((item.originalPrice - item.price) / item.originalPrice * 100).round();
+                              
+                              return OfferCard(
+                                title: item.name,
+                                storeName: item.restaurantName ?? "Restaurant",
+                                distance: "0.5 mi", // TODO: Calculate distance
+                                originalPrice: "\$${item.originalPrice.toStringAsFixed(2)}",
+                                discountedPrice: "\$${item.price.toStringAsFixed(2)}",
+                                pickupTime: item.pickupTime,
+                                quantityLeft: "${item.quantity} left",
+                                imageColor: Colors.orange.shade400, // Placeholder
+                                icon: Icons.bakery_dining, // Placeholder
+                                discountPercent: "$discount% OFF",
+                                restaurantId: item.restaurantId,
+                                restaurantName: item.restaurantName,
+                                foodItemData: {
+                                  'id': item.id,
+                                  'name': item.name,
+                                  'price': item.price,
+                                  'originalPrice': item.originalPrice,
+                                  'quantity': item.quantity,
+                                  'pickupTime': item.pickupTime,
+                                  'imageUrl': item.imageUrl,
+                                  'allergens': item.allergens,
+                                  'restaurantId': item.restaurantId,
+                                  'restaurantName': item.restaurantName,
+                                },
+                              );
+                            }).toList(),
+                          );
+                        },
                       ),
                     ),
                     

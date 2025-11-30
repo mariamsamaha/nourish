@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:proj/routes/app_routes.dart';
+import 'package:proj/services/auth_service.dart';
 
 class CreateAccountScreen extends StatefulWidget {
   const CreateAccountScreen({super.key});
@@ -14,6 +15,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
 
   String _selectedCountryCode = '+20'; // default prefix (Egypt)
 
@@ -167,27 +170,55 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                   width: double.infinity,
                   height: height * 0.065,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: _isLoading ? null : () async {
                       if (_formKey.currentState!.validate()) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              "Account Created Successfully with $_selectedCountryCode${_phoneController.text}",
-                            ),
-                          ),
-                        );
-                        // Navigate to Impact Screen
-                        Navigator.pushNamed(context, AppRoutes.impact);
+                        setState(() {
+                          _isLoading = true;
+                        });
+                        
+                        try {
+                          await _authService.signUpWithEmail(
+                            _emailController.text.trim(),
+                            _passwordController.text,
+                          );
+                          
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Account created successfully!'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                            Navigator.pushReplacementNamed(context, AppRoutes.home);
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(e.toString()),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        } finally {
+                          if (mounted) {
+                            setState(() {
+                              _isLoading = false;
+                            });
+                          }
+                        }
                       }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
-                    child: const Text(
-                      "Create Account",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
-                    ),
+                    child: _isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text(
+                            "Create Account",
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+                          ),
                   ),
                 ),
 

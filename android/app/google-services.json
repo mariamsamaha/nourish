@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "413198671972",
+    "project_id": "mobprojnourish",
+    "storage_bucket": "mobprojnourish.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:413198671972:android:f1db8d84c8fba1b413bf71",
+        "android_client_info": {
+          "package_name": "com.example.proj"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_ZQI09ytX25zcCDVrxiRiTyD152vHNL4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

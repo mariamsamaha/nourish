@@ -1,12 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:proj/widgets/custom_bottom_nav_bar.dart';
+import 'package:proj/routes/app_routes.dart';
+import 'package:proj/services/firestore_service.dart';
+import 'package:proj/models/charity_model.dart';
 
-class CharityScreen extends StatelessWidget {
+class CharityScreen extends StatefulWidget {
   const CharityScreen({super.key});
+
+  @override
+  State<CharityScreen> createState() => _CharityScreenState();
+}
+
+class _CharityScreenState extends State<CharityScreen> {
+  int _currentIndex = 2; // Charity is index 2
+
+  void _onNavTap(int index) {
+    if (index == _currentIndex) return; // Already on this screen
+    
+    setState(() {
+      _currentIndex = index;
+    });
+
+    // Navigate to other screens
+    if (index == 0) {
+      Navigator.pushNamed(context, AppRoutes.home);
+    } else if (index == 1) {
+      Navigator.pushNamed(context, AppRoutes.browseRestaurants);
+    } else if (index == 3) {
+      Navigator.pushNamed(context, AppRoutes.profile);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF5F7FA), // Match home screen
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -22,10 +51,6 @@ class CharityScreen extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.chevron_left, size: 20),
-                      onPressed: () => Navigator.pop(context),
-                    ),
                     const SizedBox(width: 12),
                     Text(
                       'Support a Charity',
@@ -134,67 +159,71 @@ class CharityScreen extends StatelessWidget {
               ),
             ),
 
-            SliverList(
-              delegate: SliverChildListDelegate([
-                CharityCard(
-                  name: 'Egyptian Food Bank',
-                  location: 'Cairo',
-                  tag: 'Food Security',
-                  description:
-                      'Fighting hunger in Egypta by providing meals to those in need.',
-                  meals: '1,234',
-                  highlight: true,
-                  highlightedColor: Colors.orange.shade600,
-                  buttonLabel: 'Currently Supporting',
-                ),
-                const SizedBox(height: 16),
+            // Real Data from Firestore
+            StreamBuilder<List<Charity>>(
+              stream: Provider.of<FirestoreService>(context).getCharities(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return SliverToBoxAdapter(
+                    child: Center(child: Text('Error: ${snapshot.error}')),
+                  );
+                }
 
-                CharityCard(
-                  name: 'Community Kitchen',
-                  location: 'Giza',
-                  tag: 'Homeless Support',
-                  description:
-                      'Providing hot meals and support services to homeless individuals in Giza.',
-                  meals: '892',
-                  highlight: false,
-                  highlightedColor: Colors.orange.shade600,
-                  buttonLabel: 'Select & Support',
-                ),
-                const SizedBox(height: 16),
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SliverToBoxAdapter(
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
 
-                CharityCard(
-                  name: 'Feeding Families',
-                  location: 'Cairo',
-                  tag: 'Family Support',
-                  description:
-                      'Supporting low-income families with nutritious meals and food education programs.',
-                  meals: '756',
-                  highlight: false,
-                  highlightedColor: Colors.orange.shade600,
-                  buttonLabel: 'Select & Support',
-                ),
-                const SizedBox(height: 16),
+                final charities = snapshot.data ?? [];
 
-                CharityCard(
-                  name: 'Senior Meals Program',
-                  location: 'Giza',
-                  tag: 'Senior Care',
-                  description:
-                      'Delivering nutritious meals to homebound seniors and elderly community members.',
-                  meals: '623',
-                  highlight: false,
-                  highlightedColor: Colors.orange.shade600,
-                  buttonLabel: 'Select & Support',
-                ),
-                const SizedBox(height: 24),
+                if (charities.isEmpty) {
+                  return const SliverToBoxAdapter(
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: Text('No charities found.'),
+                      ),
+                    ),
+                  );
+                }
 
-                
-                ImpactCard(),
-                const SizedBox(height: 48),
-              ]),
+                return SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final charity = charities[index];
+                      // TODO: Check if this is the user's supported charity
+                      final bool isSupported = index == 0; 
+                      
+                      return Column(
+                        children: [
+                          CharityCard(
+                            name: charity.name,
+                            location: 'Location', // TODO: Add location to model
+                            tag: 'Charity', // TODO: Add tag to model
+                            description: charity.description,
+                            meals: charity.currentImpact.toInt().toString(),
+                            highlight: isSupported,
+                            highlightedColor: Colors.orange.shade600,
+                            buttonLabel: isSupported ? 'Currently Supporting' : 'Select & Support',
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      );
+                    },
+                    childCount: charities.length,
+                  ),
+                );
+              },
             ),
+            
+            const SliverToBoxAdapter(child: SizedBox(height: 48)),
           ],
         ),
+      ),
+      bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: _currentIndex,
+        onTap: _onNavTap,
       ),
     );
   }
@@ -247,6 +276,7 @@ class CharityCard extends StatelessWidget {
                     color: Colors.grey.shade200,
                     borderRadius: BorderRadius.circular(8),
                   ),
+                  // TODO: Add Image.network(imageUrl) here
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -353,101 +383,6 @@ class CharityCard extends StatelessWidget {
                     ),
                     child: Text(buttonLabel),
                   ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class ImpactCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: Colors.transparent,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: Colors.green.shade200),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.green.shade50, Colors.green.shade50],
-          ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade600,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Icon(Icons.people, color: Colors.white, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Your Charity Impact',
-                  style: TextStyle(
-                    color: Colors.grey[900],
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            Row(
-              children: [
-                _impactBox(
-                  label: 'Donations',
-                  value: '\$24.50',
-                  color: Colors.green.shade600,
-                ),
-                const SizedBox(width: 12),
-                _impactBox(
-                  label: 'Meals Funded',
-                  value: '18',
-                  color: Colors.green.shade600,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _impactBox({
-    required String label,
-    required String value,
-    required Color color,
-  }) {
-    return Expanded(
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.6),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label,
-                style: TextStyle(color: Colors.grey[600], fontSize: 14)),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: TextStyle(color: color, fontSize: 16),
-            ),
           ],
         ),
       ),

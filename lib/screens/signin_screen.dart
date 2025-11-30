@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:proj/routes/app_routes.dart';
+import 'package:proj/services/auth_service.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -12,6 +13,8 @@ class _SignInScreenState extends State<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -93,20 +96,49 @@ class _SignInScreenState extends State<SignInScreen> {
                   width: double.infinity,
                   height: height * 0.065,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: _isLoading ? null : () async {
                       if (_formKey.currentState!.validate()) {
-                        // Navigate to Home/FoodDetails on success
-                        Navigator.pushNamed(context, AppRoutes.home);
+                        setState(() {
+                          _isLoading = true;
+                        });
+                        
+                        try {
+                          await _authService.signInWithEmail(
+                            _emailController.text.trim(),
+                            _passwordController.text,
+                          );
+                          
+                          if (mounted) {
+                            Navigator.pushReplacementNamed(context, AppRoutes.home);
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(e.toString()),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        } finally {
+                          if (mounted) {
+                            setState(() {
+                              _isLoading = false;
+                            });
+                          }
+                        }
                       }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green.shade600,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text(
-                      "Sign In",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
-                    ),
+                    child: _isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text(
+                            "Sign In",
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+                          ),
                   ),
                 ),
 

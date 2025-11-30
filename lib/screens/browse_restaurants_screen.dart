@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:proj/routes/app_routes.dart';
+import 'package:proj/widgets/custom_bottom_nav_bar.dart';
+import 'package:proj/services/firestore_service.dart';
+import 'package:proj/models/restaurant_model.dart';
 
 class BrowseRestaurantsScreen extends StatefulWidget {
   const BrowseRestaurantsScreen({super.key});
@@ -8,19 +12,42 @@ class BrowseRestaurantsScreen extends StatefulWidget {
 }
 
 class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
-  int _selectedTab = 0; 
+  int _selectedTab = 0;
+  int _currentIndex = 1; // Browse is index 1
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onNavTap(int index) {
+    if (index == _currentIndex) return; // Already on this screen
+    
+    setState(() {
+      _currentIndex = index;
+    });
+
+    // Navigate to other screens
+    if (index == 0) {
+      Navigator.pushNamed(context, AppRoutes.home);
+    } else if (index == 2) {
+      Navigator.pushNamed(context, AppRoutes.charity);
+    } else if (index == 3) {
+      Navigator.pushNamed(context, AppRoutes.profile);
+    }
+  } 
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F8F0),
+      backgroundColor: const Color(0xFFF5F7FA), // Match home screen
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1B5E20)),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: false,
         title: const Text(
           'Browse',
           style: TextStyle(
@@ -29,144 +56,158 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: [
-          TextButton.icon(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Filters coming soon!'),
-                  backgroundColor: Color(0xFF4CAF50),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                // Tab selector
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  child: Row(
+                    children: [
+                      _buildTab('Nearby', 0),
+                      _buildTab('Pick-up', 1),
+                      _buildTab('Delivery', 2),
+                    ],
+                  ),
                 ),
-              );
-            },
-            icon: const Icon(Icons.tune, color: Color(0xFF1B5E20)),
-            label: const Text(
-              'Filters',
-              style: TextStyle(
-                color: Color(0xFF1B5E20),
-                fontSize: 16,
-              ),
+                const SizedBox(height: 16),
+
+                // Search Bar
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value.toLowerCase();
+                      });
+                    },
+                    decoration: InputDecoration(
+                      hintText: "Search restaurants...",
+                      hintStyle: TextStyle(color: Colors.grey.shade400),
+                      prefixIcon: Icon(Icons.search, color: Colors.grey.shade400),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                OutlinedButton.icon(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Map view coming soon!'),
+                        backgroundColor: Color(0xFF4CAF50),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.location_on_outlined, color: Color(0xFF1B5E20)),
+                  label: const Text(
+                    'View on Map',
+                    style: TextStyle(
+                      color: Color(0xFF1B5E20),
+                      fontSize: 16,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    side: BorderSide(color: Colors.grey[300]!),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Real Data from Firestore
+          Expanded(
+            child: StreamBuilder<List<Restaurant>>(
+              stream: _selectedTab == 0
+                  ? Provider.of<FirestoreService>(context).getRestaurants()
+                  : _selectedTab == 1
+                      ? Provider.of<FirestoreService>(context).getRestaurantsFiltered(hasPickup: true)
+                      : Provider.of<FirestoreService>(context).getRestaurantsFiltered(hasDelivery: true),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final restaurants = snapshot.data ?? [];
+
+                // Filter restaurants based on search query
+                final filteredRestaurants = _searchQuery.isEmpty
+                    ? restaurants
+                    : restaurants.where((restaurant) {
+                        return restaurant.name.toLowerCase().contains(_searchQuery) ||
+                               restaurant.tags.any((tag) => tag.toLowerCase().contains(_searchQuery));
+                      }).toList();
+
+                if (filteredRestaurants.isEmpty) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: Text('No restaurants found.'),
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: filteredRestaurants.length,
+                  itemBuilder: (context, index) {
+                    final restaurant = filteredRestaurants[index];
+                    return Column(
+                      children: [
+                        _buildRestaurantCard(
+                          restaurant.id,
+                          'Available',
+                          restaurant.name,
+                          restaurant.rating,
+                          restaurant.reviews,
+                          0.5,
+                          restaurant.tags,
+                          'Pick up today',
+                          restaurant.imageUrl,
+                          restaurant.hasDelivery,
+                          restaurant.hasPickup,
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    );
+                  },
+                );
+              },
             ),
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Tab selector
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(25),
-            ),
-            child: Row(
-              children: [
-                _buildTab('Nearby', 0),
-                _buildTab('Pick-up', 1),
-                _buildTab('Delivery', 2),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          OutlinedButton.icon(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Map view coming soon!'),
-                  backgroundColor: Color(0xFF4CAF50),
-                ),
-              );
-            },
-            icon: const Icon(Icons.location_on_outlined, color: Color(0xFF1B5E20)),
-            label: const Text(
-              'View on Map',
-              style: TextStyle(
-                color: Color(0xFF1B5E20),
-                fontSize: 16,
-              ),
-            ),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              side: BorderSide(color: Colors.grey[300]!),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          _buildRestaurantCard(
-            '3 items available',
-            'Bascota Bakery',
-            4.9,
-            234,
-            0.3,
-            ['Bakery', 'Pastries'],
-            'Pick up today 7-9 PM',
-            'https://images.unsplash.com/photo-1523983309556-cff6b2c2de27?w=800',
-          ),
-          const SizedBox(height: 16),
-
-          _buildRestaurantCard(
-            '5 items available',
-            'Koffe Kulture',
-            4.7,
-            189,
-            0.5,
-            ['Drinks', 'Coffee'],
-            'Pick up today 6-10 PM',
-            'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800',
-          ),
-          const SizedBox(height: 16),
-
-          _buildRestaurantCard(
-            '8 items available',
-            'Sushimi By K',
-            4.8,
-            512,
-            0.7,
-            ['Japanese', 'Sushi'],
-            'Pick up today 5-11 PM',
-            'https://images.unsplash.com/photo-1553621042-f6e147245754?w=800',
-          ),
-          const SizedBox(height: 16),
-
-          _buildRestaurantCard(
-            '2 items available',
-            'Pizza House',
-            4.9,
-            378,
-            1.2,
-            ['Italian', 'Pizza'],
-            'Pick up today 6-9 PM',
-            'https://images.unsplash.com/photo-1601924582975-7aa6d1b43c33?w=800',
-          ),
-          const SizedBox(height: 16),
-
-          _buildRestaurantCard(
-            '6 items available',
-            'Crave',
-            4.6,
-            421,
-            0.4,
-            ['American', 'Burgers'],
-            'Pick up today 11 AM-10 PM',
-            'https://images.unsplash.com/photo-1550547660-d9450f859349?w=800',
-          ),
-          const SizedBox(height: 16),
-
-          _buildRestaurantCard(
-            '4 items available',
-            'Thai Spice',
-            4.8,
-            267,
-            0.9,
-            ['Thai', 'Asian'],
-            'Pick up today 5-9 PM',
-            'https://images.unsplash.com/photo-1604909052714-29db4a1d2cb5?w=800',
-          ),
-        ],
+      bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: _currentIndex,
+        onTap: _onNavTap,
       ),
     );
   }
@@ -200,6 +241,7 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
   }
 
   Widget _buildRestaurantCard(
+    String id,
     String availability,
     String name,
     double rating,
@@ -208,6 +250,8 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
     List<String> tags,
     String pickupTime,
     String imageUrl,
+    bool hasDelivery,
+    bool hasPickup,
   ) {
     return GestureDetector(
       onTap: () {
@@ -215,6 +259,7 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
           context,
           AppRoutes.restaurantDetail,
           arguments: {
+            'id': id,
             'name': name,
             'rating': rating,
             'reviews': reviews,
@@ -243,9 +288,9 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
           children: [
             Container(
               height: 200,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE8F5E9),
-                borderRadius: const BorderRadius.vertical(
+              decoration: const BoxDecoration(
+                color: Color(0xFFE8F5E9),
+                borderRadius: BorderRadius.vertical(
                   top: Radius.circular(12),
                 ),
               ),
@@ -263,23 +308,50 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
                       ),
                     ),
                   ),
+                  // Delivery/Pickup Badges
                   Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF4CAF50),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        availability,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
+                    top: 16,
+                    right: 16,
+                    child: Row(
+                      children: [
+                        if (hasPickup)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF4CAF50),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.shopping_bag, color: Colors.white, size: 14),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Pickup',
+                                  style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        if (hasPickup && hasDelivery) const SizedBox(width: 8),
+                        if (hasDelivery)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2196F3),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.delivery_dining, color: Colors.white, size: 14),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Delivery',
+                                  style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ],
@@ -308,13 +380,17 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
                         '$rating ($reviews)',
                         style: const TextStyle(
                           fontWeight: FontWeight.w500,
-                          color: Color(0xFF1B5E20),
+                          fontSize: 14,
                         ),
                       ),
+                      const SizedBox(width: 16),
+                      const Icon(Icons.location_on, color: Colors.grey, size: 16),
+                      const SizedBox(width: 4),
                       Text(
-                        '  •  $distance mi',
+                        '${distance.toStringAsFixed(1)} mi',
                         style: TextStyle(
                           color: Colors.grey[600],
+                          fontSize: 14,
                         ),
                       ),
                     ],
@@ -323,30 +399,36 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: tags.map((tag) => Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFFA5D6A7).withOpacity(0.5)),
-                        borderRadius: BorderRadius.circular(20),
-                        color: const Color(0xFFE8F5E9).withOpacity(0.5),
-                      ),
-                      child: Text(
-                        tag,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF2E7D32),
+                    children: tags.map((tag) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F5E9),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                      ),
-                    )).toList(),
+                        child: Text(
+                          tag,
+                          style: const TextStyle(
+                            color: Color(0xFF2E7D32),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    }).toList(),
                   ),
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      const Icon(Icons.access_time, size: 18, color: Color(0xFF2E7D32)),
+                      const Icon(Icons.schedule, color: Color(0xFF4CAF50), size: 16),
                       const SizedBox(width: 4),
                       Text(
                         pickupTime,
-                        style: const TextStyle(color: Color(0xFF2E7D32)),
+                        style: const TextStyle(
+                          color: Color(0xFF2E7D32),
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
                       ),
                     ],
                   ),
