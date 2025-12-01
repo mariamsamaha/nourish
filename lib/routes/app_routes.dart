@@ -10,6 +10,7 @@ import 'package:proj/screens/browse_restaurants_screen.dart';
 import 'package:proj/screens/restaurant_detail_screen.dart';
 import 'package:proj/screens/charity_screen.dart';
 import 'package:proj/screens/profile_screen.dart';
+import 'package:proj/screens/welcome_screen.dart';
 import 'package:proj/screens/subscription_screen.dart';
 
 class AppRoutes {
@@ -25,7 +26,6 @@ class AppRoutes {
   static const String charity = '/charity';
   static const String profile = '/profile';
   static const String subscription = '/subscription';
-
   static Map<String, WidgetBuilder> routes = {
     welcome: (context) => const WelcomeScreen(),
     signup: (context) => const CreateAccountScreen(),
