@@ -30,7 +30,7 @@ class DatabaseService {
     
     return await openDatabase(
       path,
-      version: 1,
+      version: 3,
       onCreate: (Database db, int version) async {
         await db.execute('''
           CREATE TABLE $_tableName (
@@ -45,6 +45,60 @@ class DatabaseService {
             UNIQUE(user_id, food_id)
           )
         ''');
+        
+        await db.execute('''
+          CREATE TABLE user_charity_preferences (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            charity_id TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            UNIQUE(user_id, charity_id)
+          )
+        ''');
+        
+        await db.execute('''
+          CREATE TABLE favorite_restaurants (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            restaurant_id TEXT NOT NULL,
+            restaurant_name TEXT NOT NULL,
+            restaurant_image TEXT,
+            restaurant_rating REAL,
+            restaurant_reviews INTEGER,
+            restaurant_tags TEXT,
+            created_at TEXT NOT NULL,
+            UNIQUE(user_id, restaurant_id)
+          )
+        ''');
+      },
+      onUpgrade: (Database db, int oldVersion, int newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute('''
+            CREATE TABLE user_charity_preferences (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              user_id TEXT NOT NULL,
+              charity_id TEXT NOT NULL,
+              created_at TEXT NOT NULL,
+              UNIQUE(user_id, charity_id)
+            )
+          ''');
+        }
+        if (oldVersion < 3) {
+          await db.execute('''
+            CREATE TABLE favorite_restaurants (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              user_id TEXT NOT NULL,
+              restaurant_id TEXT NOT NULL,
+              restaurant_name TEXT NOT NULL,
+              restaurant_image TEXT,
+              restaurant_rating REAL,
+              restaurant_reviews INTEGER,
+              restaurant_tags TEXT,
+              created_at TEXT NOT NULL,
+              UNIQUE(user_id, restaurant_id)
+            )
+          ''');
+        }
       },
     );
   }
@@ -281,6 +335,313 @@ class DatabaseService {
       );
       
       return result.first['total'] as double? ?? 0.0;
+    }
+  }
+
+  // ===== CHARITY PREFERENCES METHODS =====
+
+  static const String _charityPrefsKey = 'charity_preferences';
+
+  /// Load charity preferences from SharedPreferences (web only)
+  Future<Map<String, List<String>>> _loadCharityPrefsFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final prefsJson = prefs.getString(_charityPrefsKey);
+    
+    if (prefsJson == null) {
+      return {};
+    }
+    
+    try {
+      final Map<String, dynamic> decoded = json.decode(prefsJson);
+      final Map<String, List<String>> result = {};
+      
+      decoded.forEach((userId, charityIds) {
+        result[userId] = List<String>.from(charityIds);
+      });
+      
+      return result;
+    } catch (e) {
+      return {};
+    }
+  }
+
+  /// Save charity preferences to SharedPreferences (web only)
+  Future<void> _saveCharityPrefsToPrefs(Map<String, List<String>> prefsData) async {
+    final prefs = await SharedPreferences.getInstance();
+    final prefsJson = json.encode(prefsData);
+    await prefs.setString(_charityPrefsKey, prefsJson);
+  }
+
+  /// Add a charity to user's supported charities
+  Future<void> addSupportedCharity({
+    required String userId,
+    required String charityId,
+  }) async {
+    if (kIsWeb) {
+      // Web implementation
+      final prefsData = await _loadCharityPrefsFromPrefs();
+      final userCharities = prefsData[userId] ?? [];
+      
+      if (!userCharities.contains(charityId)) {
+        userCharities.add(charityId);
+        prefsData[userId] = userCharities;
+        await _saveCharityPrefsToPrefs(prefsData);
+      }
+    } else {
+      // Mobile/Desktop implementation
+      final db = await database;
+      
+      try {
+        await db.insert(
+          'user_charity_preferences',
+          {
+            'user_id': userId,
+            'charity_id': charityId,
+            'created_at': DateTime.now().toIso8601String(),
+          },
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      } catch (e) {
+        // Ignore if already exists
+      }
+    }
+  }
+
+  /// Remove a charity from user's supported charities
+  Future<void> removeSupportedCharity({
+    required String userId,
+    required String charityId,
+  }) async {
+    if (kIsWeb) {
+      // Web implementation
+      final prefsData = await _loadCharityPrefsFromPrefs();
+      final userCharities = prefsData[userId] ?? [];
+      
+      userCharities.remove(charityId);
+      prefsData[userId] = userCharities;
+      await _saveCharityPrefsToPrefs(prefsData);
+    } else {
+      // Mobile/Desktop implementation
+      final db = await database;
+      await db.delete(
+        'user_charity_preferences',
+        where: 'user_id = ? AND charity_id = ?',
+        whereArgs: [userId, charityId],
+      );
+    }
+  }
+
+  /// Get all charities supported by a user
+  Future<List<String>> getSupportedCharities(String userId) async {
+    if (kIsWeb) {
+      // Web implementation
+      final prefsData = await _loadCharityPrefsFromPrefs();
+      return prefsData[userId] ?? [];
+    } else {
+      // Mobile/Desktop implementation
+      final db = await database;
+      final results = await db.query(
+        'user_charity_preferences',
+        columns: ['charity_id'],
+        where: 'user_id = ?',
+        whereArgs: [userId],
+      );
+      
+      return results.map((row) => row['charity_id'] as String).toList();
+    }
+  }
+
+  /// Check if a user supports a specific charity
+  Future<bool> isCharitySupported({
+    required String userId,
+    required String charityId,
+  }) async {
+    if (kIsWeb) {
+      // Web implementation
+      final prefsData = await _loadCharityPrefsFromPrefs();
+      final userCharities = prefsData[userId] ?? [];
+      return userCharities.contains(charityId);
+    } else {
+      // Mobile/Desktop implementation
+      final db = await database;
+      final results = await db.query(
+        'user_charity_preferences',
+        where: 'user_id = ? AND charity_id = ?',
+        whereArgs: [userId, charityId],
+      );
+      
+      return results.isNotEmpty;
+    }
+  }
+
+  // ===== FAVORITE RESTAURANTS METHODS =====
+
+  static const String _favoriteRestaurantsKey = 'favorite_restaurants';
+
+  /// Load favorite restaurants from SharedPreferences (web only)
+  Future<Map<String, List<Map<String, dynamic>>>> _loadFavoriteRestaurantsFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final prefsJson = prefs.getString(_favoriteRestaurantsKey);
+    
+    if (prefsJson == null) {
+      return {};
+    }
+    
+    try {
+      final Map<String, dynamic> decoded = json.decode(prefsJson);
+      final Map<String, List<Map<String, dynamic>>> result = {};
+      
+      decoded.forEach((userId, restaurants) {
+        result[userId] = List<Map<String, dynamic>>.from(restaurants);
+      });
+      
+      return result;
+    } catch (e) {
+      return {};
+    }
+  }
+
+  /// Save favorite restaurants to SharedPreferences (web only)
+  Future<void> _saveFavoriteRestaurantsToPrefs(Map<String, List<Map<String, dynamic>>> prefsData) async {
+    final prefs = await SharedPreferences.getInstance();
+    final prefsJson = json.encode(prefsData);
+    await prefs.setString(_favoriteRestaurantsKey, prefsJson);
+  }
+
+  /// Add a restaurant to user's favorites
+  Future<void> addFavoriteRestaurant({
+    required String userId,
+    required String restaurantId,
+    required String restaurantName,
+    String? restaurantImage,
+    double? restaurantRating,
+    int? restaurantReviews,
+    List<String>? restaurantTags,
+  }) async {
+    if (kIsWeb) {
+      // Web implementation
+      final prefsData = await _loadFavoriteRestaurantsFromPrefs();
+      final userFavorites = prefsData[userId] ?? [];
+      
+      // Check if already exists
+      if (!userFavorites.any((r) => r['restaurant_id'] == restaurantId)) {
+        userFavorites.add({
+          'restaurant_id': restaurantId,
+          'restaurant_name': restaurantName,
+          'restaurant_image': restaurantImage,
+          'restaurant_rating': restaurantRating,
+          'restaurant_reviews': restaurantReviews,
+          'restaurant_tags': restaurantTags?.join(','),
+          'created_at': DateTime.now().toIso8601String(),
+        });
+        prefsData[userId] = userFavorites;
+        await _saveFavoriteRestaurantsToPrefs(prefsData);
+      }
+    } else {
+      // Mobile/Desktop implementation
+      final db = await database;
+      
+      try {
+        await db.insert(
+          'favorite_restaurants',
+          {
+            'user_id': userId,
+            'restaurant_id': restaurantId,
+            'restaurant_name': restaurantName,
+            'restaurant_image': restaurantImage,
+            'restaurant_rating': restaurantRating,
+            'restaurant_reviews': restaurantReviews,
+            'restaurant_tags': restaurantTags?.join(','),
+            'created_at': DateTime.now().toIso8601String(),
+          },
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      } catch (e) {
+        // Ignore if already exists
+      }
+    }
+  }
+
+  /// Remove a restaurant from user's favorites
+  Future<void> removeFavoriteRestaurant({
+    required String userId,
+    required String restaurantId,
+  }) async {
+    if (kIsWeb) {
+      // Web implementation
+      final prefsData = await _loadFavoriteRestaurantsFromPrefs();
+      final userFavorites = prefsData[userId] ?? [];
+      
+      userFavorites.removeWhere((r) => r['restaurant_id'] == restaurantId);
+      prefsData[userId] = userFavorites;
+      await _saveFavoriteRestaurantsToPrefs(prefsData);
+    } else {
+      // Mobile/Desktop implementation
+      final db = await database;
+      await db.delete(
+        'favorite_restaurants',
+        where: 'user_id = ? AND restaurant_id = ?',
+        whereArgs: [userId, restaurantId],
+      );
+    }
+  }
+
+  /// Get all favorite restaurants for a user
+  Future<List<Map<String, dynamic>>> getFavoriteRestaurants(String userId) async {
+    if (kIsWeb) {
+      // Web implementation
+      final prefsData = await _loadFavoriteRestaurantsFromPrefs();
+      final favorites = prefsData[userId] ?? [];
+      
+      // Parse tags back to list
+      return favorites.map((r) {
+        final tags = r['restaurant_tags'] as String?;
+        return {
+          ...r,
+          'restaurant_tags': tags != null && tags.isNotEmpty ? tags.split(',') : <String>[],
+        };
+      }).toList();
+    } else {
+      // Mobile/Desktop implementation
+      final db = await database;
+      final results = await db.query(
+        'favorite_restaurants',
+        where: 'user_id = ?',
+        whereArgs: [userId],
+        orderBy: 'created_at DESC',
+      );
+      
+      // Parse tags back to list
+      return results.map((row) {
+        final tags = row['restaurant_tags'] as String?;
+        return {
+          ...row,
+          'restaurant_tags': tags != null && tags.isNotEmpty ? tags.split(',') : <String>[],
+        };
+      }).toList();
+    }
+  }
+
+  /// Check if a restaurant is favorited by user
+  Future<bool> isRestaurantFavorited({
+    required String userId,
+    required String restaurantId,
+  }) async {
+    if (kIsWeb) {
+      // Web implementation
+      final prefsData = await _loadFavoriteRestaurantsFromPrefs();
+      final userFavorites = prefsData[userId] ?? [];
+      return userFavorites.any((r) => r['restaurant_id'] == restaurantId);
+    } else {
+      // Mobile/Desktop implementation
+      final db = await database;
+      final results = await db.query(
+        'favorite_restaurants',
+        where: 'user_id = ? AND restaurant_id = ?',
+        whereArgs: [userId, restaurantId],
+      );
+      
+      return results.isNotEmpty;
     }
   }
 

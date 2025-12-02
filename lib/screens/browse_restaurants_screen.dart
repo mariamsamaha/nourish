@@ -4,6 +4,8 @@ import 'package:proj/routes/app_routes.dart';
 import 'package:proj/widgets/custom_bottom_nav_bar.dart';
 import 'package:proj/services/firestore_service.dart';
 import 'package:proj/models/restaurant_model.dart';
+import 'package:proj/services/database_service.dart';
+import 'package:proj/services/auth_service.dart';
 
 class BrowseRestaurantsScreen extends StatefulWidget {
   const BrowseRestaurantsScreen({super.key});
@@ -16,6 +18,62 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
   int _currentIndex = 1; // Browse is index 1
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  final DatabaseService _dbService = DatabaseService();
+  Set<String> _favoritedRestaurantIds = {};
+  String? _userId;
+  bool _isLoadingFavorites = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserFavorites();
+  }
+
+  Future<void> _loadUserFavorites() async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    _userId = await authService.getStoredUserId();
+    
+    if (_userId != null) {
+      final favorites = await _dbService.getFavoriteRestaurants(_userId!);
+      setState(() {
+        _favoritedRestaurantIds = favorites.map((f) => f['restaurant_id'] as String).toSet();
+        _isLoadingFavorites = false;
+      });
+    } else {
+      setState(() {
+        _isLoadingFavorites = false;
+      });
+    }
+  }
+
+  Future<void> _toggleFavorite(Restaurant restaurant) async {
+    if (_userId == null) return;
+
+    setState(() {
+      if (_favoritedRestaurantIds.contains(restaurant.id)) {
+        _favoritedRestaurantIds.remove(restaurant.id);
+      } else {
+        _favoritedRestaurantIds.add(restaurant.id);
+      }
+    });
+
+    if (_favoritedRestaurantIds.contains(restaurant.id)) {
+      await _dbService.addFavoriteRestaurant(
+        userId: _userId!,
+        restaurantId: restaurant.id,
+        restaurantName: restaurant.name,
+        restaurantImage: restaurant.imageUrl,
+        restaurantRating: restaurant.rating,
+        restaurantReviews: restaurant.reviews,
+        restaurantTags: restaurant.tags,
+      );
+    } else {
+      await _dbService.removeFavoriteRestaurant(
+        userId: _userId!,
+        restaurantId: restaurant.id,
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -109,33 +167,8 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-
-                OutlinedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Map view coming soon!'),
-                        backgroundColor: Color(0xFF4CAF50),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.location_on_outlined, color: Color(0xFF1B5E20)),
-                  label: const Text(
-                    'View on Map',
-                    style: TextStyle(
-                      color: Color(0xFF1B5E20),
-                      fontSize: 16,
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    side: BorderSide(color: Colors.grey[300]!),
-                  ),
-                ),
-              ],
+              ]
+              
             ),
           ),
           
@@ -175,25 +208,21 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
                   );
                 }
 
+
                 return ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: filteredRestaurants.length,
                   itemBuilder: (context, index) {
                     final restaurant = filteredRestaurants[index];
+                    final isFavorited = _favoritedRestaurantIds.contains(restaurant.id);
+                    
                     return Column(
                       children: [
                         _buildRestaurantCard(
-                          restaurant.id,
-                          'Available',
-                          restaurant.name,
-                          restaurant.rating,
-                          restaurant.reviews,
-                          0.5,
-                          restaurant.tags,
+                          restaurant,
+                          isFavorited,
+                          0.5, // distance
                           'Pick up today',
-                          restaurant.imageUrl,
-                          restaurant.hasDelivery,
-                          restaurant.hasPickup,
                         ),
                         const SizedBox(height: 16),
                       ],
@@ -241,17 +270,10 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
   }
 
   Widget _buildRestaurantCard(
-    String id,
-    String availability,
-    String name,
-    double rating,
-    int reviews,
+    Restaurant restaurant,
+    bool isFavorited,
     double distance,
-    List<String> tags,
     String pickupTime,
-    String imageUrl,
-    bool hasDelivery,
-    bool hasPickup,
   ) {
     return GestureDetector(
       onTap: () {
@@ -259,12 +281,12 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
           context,
           AppRoutes.restaurantDetail,
           arguments: {
-            'id': id,
-            'name': name,
-            'rating': rating,
-            'reviews': reviews,
-            'tags': tags,
-            'image': imageUrl,
+            'id': restaurant.id,
+            'name': restaurant.name,
+            'rating': restaurant.rating,
+            'reviews': restaurant.reviews,
+            'tags': restaurant.tags,
+            'image': restaurant.imageUrl,
           },
         );
       },
@@ -299,12 +321,39 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
                   ClipRRect(
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                     child: Image.network(
-                      imageUrl,
+                      restaurant.imageUrl,
                       width: double.infinity,
                       height: 200,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => const Center(
                         child: Icon(Icons.restaurant, size: 80, color: Color(0xFF4CAF50)),
+                      ),
+                    ),
+                  ),
+                  // Favorite Button
+                  Positioned(
+                    top: 16,
+                    left: 16,
+                    child: GestureDetector(
+                      onTap: () => _toggleFavorite(restaurant),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          isFavorited ? Icons.favorite : Icons.favorite_border,
+                          color: isFavorited ? Colors.red : Colors.grey[700],
+                          size: 20,
+                        ),
                       ),
                     ),
                   ),
@@ -314,7 +363,7 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
                     right: 16,
                     child: Row(
                       children: [
-                        if (hasPickup)
+                        if (restaurant.hasPickup)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
@@ -332,8 +381,8 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
                               ],
                             ),
                           ),
-                        if (hasPickup && hasDelivery) const SizedBox(width: 8),
-                        if (hasDelivery)
+                        if (restaurant.hasPickup && restaurant.hasDelivery) const SizedBox(width: 8),
+                        if (restaurant.hasDelivery)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
@@ -364,7 +413,7 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    name,
+                    restaurant.name,
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -377,7 +426,7 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
                       const Icon(Icons.star, color: Colors.amber, size: 20),
                       const SizedBox(width: 4),
                       Text(
-                        '$rating ($reviews)',
+                        '${restaurant.rating} (${restaurant.reviews})',
                         style: const TextStyle(
                           fontWeight: FontWeight.w500,
                           fontSize: 14,
@@ -399,7 +448,7 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: tags.map((tag) {
+                    children: restaurant.tags.map((tag) {
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(

@@ -4,6 +4,7 @@ import 'package:proj/widgets/custom_bottom_nav_bar.dart';
 import 'package:proj/routes/app_routes.dart';
 import 'package:proj/services/data_seeder.dart';
 import 'package:proj/services/auth_service.dart';
+import 'package:proj/services/database_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -52,6 +53,170 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       }
     }
+  }
+
+  Future<void> _showFavoritesModal(BuildContext context) async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final userId = await authService.getStoredUserId();
+
+    if (userId == null) return;
+
+    final dbService = DatabaseService();
+    final favorites = await dbService.getFavoriteRestaurants(userId);
+
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (_, controller) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Favorite Restaurants',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: favorites.isEmpty
+                    ? const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.favorite_border, size: 64, color: Colors.grey),
+                            SizedBox(height: 16),
+                            Text(
+                              'No favorite restaurants yet',
+                              style: TextStyle(fontSize: 16, color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: controller,
+                        padding: const EdgeInsets.all(16),
+                        itemCount: favorites.length,
+                        itemBuilder: (context, index) {
+                          final fav = favorites[index];
+                          final tags = fav['restaurant_tags'] as List<dynamic>? ?? [];
+                          
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.pop(context);
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.restaurantDetail,
+                                  arguments: {
+                                    'id': fav['restaurant_id'],
+                                    'name': fav['restaurant_name'],
+                                    'rating': fav['restaurant_rating'] ?? 0.0,
+                                    'reviews': fav['restaurant_reviews'] ?? 0,
+                                    'tags': tags,
+                                    'image': fav['restaurant_image'] ?? '',
+                                  },
+                                );
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Row(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.network(
+                                        fav['restaurant_image'] ?? '',
+                                        width: 80,
+                                        height: 80,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Container(
+                                          width: 80,
+                                          height: 80,
+                                          color: Colors.grey.shade200,
+                                          child: const Icon(Icons.restaurant),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            fav['restaurant_name'] ?? 'Restaurant',
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.star, size: 16, color: Colors.amber),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                '${fav['restaurant_rating'] ?? 0.0} (${fav['restaurant_reviews'] ?? 0})',
+                                                style: const TextStyle(fontSize: 14),
+                                              ),
+                                            ],
+                                          ),
+                                          if (tags.isNotEmpty)
+                                            const SizedBox(height: 8),
+                                          if (tags.isNotEmpty)
+                                            Wrap(
+                                              spacing: 4,
+                                              children: tags.take(2).map((tag) => Chip(
+                                                label: Text(
+                                                  tag.toString(),
+                                                  style: const TextStyle(fontSize: 11),
+                                                ),
+                                                padding: EdgeInsets.zero,
+                                                visualDensity: VisualDensity.compact,
+                                              )).toList(),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    const Icon(Icons.chevron_right),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -112,6 +277,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     SectionItem(icon: Icons.favorite, label: 'Favorite Restaurants', background: Colors.red.shade50, iconColor: Colors.red.shade600),
                     SectionItem(icon: Icons.settings, label: 'App Settings', background: Colors.grey.shade50, iconColor: Colors.grey.shade600),
                   ],
+                  onTap: (index) {
+                    if (index == 0) {
+                      _showFavoritesModal(context);
+                    }
+                  },
                 ),
               ),
             ),
@@ -171,8 +341,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: LogoutButton(onPressed: () {
-                  
+                child: LogoutButton(onPressed: () async {
+                  final authService = Provider.of<AuthService>(context, listen: false);
+                  await authService.signOut();
+                  if (mounted) {
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                      AppRoutes.welcome,
+                      (route) => false,
+                    );
+                  }
                 }),
               ),
             ),

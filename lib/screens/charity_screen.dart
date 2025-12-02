@@ -4,6 +4,8 @@ import 'package:proj/widgets/custom_bottom_nav_bar.dart';
 import 'package:proj/routes/app_routes.dart';
 import 'package:proj/services/firestore_service.dart';
 import 'package:proj/models/charity_model.dart';
+import 'package:proj/services/database_service.dart';
+import 'package:proj/services/auth_service.dart';
 
 class CharityScreen extends StatefulWidget {
   const CharityScreen({super.key});
@@ -14,6 +16,57 @@ class CharityScreen extends StatefulWidget {
 
 class _CharityScreenState extends State<CharityScreen> {
   int _currentIndex = 2; // Charity is index 2
+  final DatabaseService _dbService = DatabaseService();
+  Set<String> _supportedCharityIds = {};
+  String? _userId;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    _userId = await authService.getStoredUserId();
+    
+    if (_userId != null) {
+      final supportedCharities = await _dbService.getSupportedCharities(_userId!);
+      setState(() {
+        _supportedCharityIds = supportedCharities.toSet();
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _toggleCharitySupport(String charityId) async {
+    if (_userId == null) return;
+
+    setState(() {
+      if (_supportedCharityIds.contains(charityId)) {
+        _supportedCharityIds.remove(charityId);
+      } else {
+        _supportedCharityIds.add(charityId);
+      }
+    });
+
+    if (_supportedCharityIds.contains(charityId)) {
+      await _dbService.addSupportedCharity(
+        userId: _userId!,
+        charityId: charityId,
+      );
+    } else {
+      await _dbService.removeSupportedCharity(
+        userId: _userId!,
+        charityId: charityId,
+      );
+    }
+  }
 
   void _onNavTap(int index) {
     if (index == _currentIndex) return; // Already on this screen
@@ -169,7 +222,7 @@ class _CharityScreenState extends State<CharityScreen> {
                   );
                 }
 
-                if (snapshot.connectionState == ConnectionState.waiting) {
+                if (snapshot.connectionState == ConnectionState.waiting || _isLoading) {
                   return const SliverToBoxAdapter(
                     child: Center(child: CircularProgressIndicator()),
                   );
@@ -192,12 +245,12 @@ class _CharityScreenState extends State<CharityScreen> {
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final charity = charities[index];
-                      // TODO: Check if this is the user's supported charity
-                      final bool isSupported = index == 0; 
+                      final bool isSupported = _supportedCharityIds.contains(charity.id);
                       
                       return Column(
                         children: [
                           CharityCard(
+                            charityId: charity.id,
                             name: charity.name,
                             location: 'Location', // TODO: Add location to model
                             tag: 'Charity', // TODO: Add tag to model
@@ -206,6 +259,7 @@ class _CharityScreenState extends State<CharityScreen> {
                             highlight: isSupported,
                             highlightedColor: Colors.orange.shade600,
                             buttonLabel: isSupported ? 'Currently Supporting' : 'Select & Support',
+                            onToggleSupport: () => _toggleCharitySupport(charity.id),
                           ),
                           const SizedBox(height: 16),
                         ],
@@ -230,6 +284,7 @@ class _CharityScreenState extends State<CharityScreen> {
 }
 
 class CharityCard extends StatelessWidget {
+  final String charityId;
   final String name;
   final String location;
   final String tag;
@@ -238,9 +293,11 @@ class CharityCard extends StatelessWidget {
   final bool highlight;
   final Color highlightedColor;
   final String buttonLabel;
+  final VoidCallback onToggleSupport;
 
   const CharityCard({
     super.key,
+    required this.charityId,
     required this.name,
     required this.location,
     required this.tag,
@@ -249,6 +306,7 @@ class CharityCard extends StatelessWidget {
     required this.highlight,
     required this.highlightedColor,
     required this.buttonLabel,
+    required this.onToggleSupport,
   });
 
   @override
@@ -366,7 +424,7 @@ class CharityCard extends StatelessWidget {
 
             highlight
                 ? OutlinedButton(
-                    onPressed: () {},
+                    onPressed: onToggleSupport,
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(48),
                       side: BorderSide(color: highlightedColor),
@@ -375,7 +433,7 @@ class CharityCard extends StatelessWidget {
                     child: Text(buttonLabel),
                   )
                 : ElevatedButton(
-                    onPressed: () {},
+                    onPressed: onToggleSupport,
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size.fromHeight(48),
                       backgroundColor: highlightedColor,

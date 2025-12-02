@@ -3,22 +3,101 @@ import 'package:provider/provider.dart';
 import 'package:proj/routes/app_routes.dart';
 import 'package:proj/services/firestore_service.dart';
 import 'package:proj/models/food_item_model.dart';
+import 'package:proj/services/database_service.dart';
+import 'package:proj/services/auth_service.dart';
 
-class RestaurantDetailScreen extends StatelessWidget {
+class RestaurantDetailScreen extends StatefulWidget {
   const RestaurantDetailScreen({super.key});
 
+  @override
+  State<RestaurantDetailScreen> createState() => _RestaurantDetailScreenState();
+}
+
+class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
   static const _green = Color(0xFF1B5E20);
   static const _lightGreen = Color(0xFFE8F5E9);
   static const _mediumGreen = Color(0xFF4CAF50);
+
+  final DatabaseService _dbService = DatabaseService();
+  bool _isFavorited = false;
+  String? _userId;
+  bool _isLoading = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_isLoading) {
+      _loadFavoriteStatus();
+    }
+  }
+
+  Future<void> _loadFavoriteStatus() async {
+    final args = ModalRoute.of(context)!.settings.arguments as Map?;
+    final String restaurantId = args?['id'] ?? 'r1';
+
+    final authService = Provider.of<AuthService>(context, listen: false);
+    _userId = await authService.getStoredUserId();
+
+    if (_userId != null) {
+      final isFav = await _dbService.isRestaurantFavorited(
+        userId: _userId!,
+        restaurantId: restaurantId,
+      );
+      setState(() {
+        _isFavorited = isFav;
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    if (_userId == null) return;
+
+    final args = ModalRoute.of(context)!.settings.arguments as Map?;
+    final String restaurantId = args?['id'] ?? 'r1';
+    final String name = args?['name'] ?? 'Restaurant';
+    final double rating = (args?['rating'] ?? 0.0).toDouble();
+    final int reviews = args?['reviews'] ?? 0;
+    final List tags = args?['tags'] ?? [];
+    final String image = args?['image'] ?? '';
+
+    setState(() {
+      _isFavorited = !_isFavorited;
+    });
+
+    if (_isFavorited) {
+      await _dbService.addFavoriteRestaurant(
+        userId: _userId!,
+        restaurantId: restaurantId,
+        restaurantName: name,
+        restaurantImage: image,
+        restaurantRating: rating,
+        restaurantReviews: reviews,
+        restaurantTags: tags.map((t) => t.toString()).toList(),
+      );
+      if (mounted) {
+        _showSnack(context, 'Added to favorites!');
+      }
+    } else {
+      await _dbService.removeFavoriteRestaurant(
+        userId: _userId!,
+        restaurantId: restaurantId,
+      );
+      if (mounted) {
+        _showSnack(context, 'Removed from favorites');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments as Map?;
 
-    // In a real app, we'd pass the ID and fetch fresh details.
-    // For now, we use the passed arguments for the restaurant info
-    // and fetch the menu items from Firestore.
-    final String restaurantId = args?['id'] ?? 'r1'; // Default ID for testing
+    final String restaurantId = args?['id'] ?? 'r1';
     final String name = args?['name'] ?? 'Restaurant';
     final double rating = (args?['rating'] ?? 0.0).toDouble();
     final int reviews = args?['reviews'] ?? 0;
@@ -27,7 +106,7 @@ class RestaurantDetailScreen extends StatelessWidget {
         'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA), // Match home screen
+      backgroundColor: const Color(0xFFF5F7FA),
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
@@ -62,7 +141,6 @@ class RestaurantDetailScreen extends StatelessWidget {
             ),
           ),
           
-          // Real Menu Data from Firestore
           StreamBuilder<List<FoodItem>>(
             stream: Provider.of<FirestoreService>(context).getFoodItemsByRestaurant(restaurantId),
             builder: (context, snapshot) {
@@ -128,10 +206,11 @@ class RestaurantDetailScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _iconButton(Icons.arrow_back, () => Navigator.pop(context)),
+                _iconButton(Icons.arrow_back, () => Navigator.pop(context), false),
                 _iconButton(
-                  Icons.favorite_border,
-                  () => _showSnack(context, 'Added to favorites!'),
+                  _isFavorited ? Icons.favorite : Icons.favorite_border,
+                  _toggleFavorite,
+                  _isFavorited,
                 ),
               ],
             ),
@@ -184,7 +263,6 @@ class RestaurantDetailScreen extends StatelessWidget {
         _infoRow(Icons.phone_outlined, '(415) 555-0123'),
         const SizedBox(height: 20),
 
-        // Tags
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -252,7 +330,6 @@ class RestaurantDetailScreen extends StatelessWidget {
               ),
               const SizedBox(width: 16),
 
-              // Text content
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -375,7 +452,7 @@ class RestaurantDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _iconButton(IconData icon, VoidCallback onTap) => GestureDetector(
+  Widget _iconButton(IconData icon, VoidCallback onTap, bool isFavorite) => GestureDetector(
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.all(12),
@@ -390,7 +467,11 @@ class RestaurantDetailScreen extends StatelessWidget {
               )
             ],
           ),
-          child: Icon(icon, size: 24, color: _green),
+          child: Icon(
+            icon,
+            size: 24,
+            color: isFavorite ? Colors.red : _green,
+          ),
         ),
       );
 

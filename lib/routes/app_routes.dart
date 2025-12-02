@@ -12,6 +12,7 @@ import 'package:proj/screens/charity_screen.dart';
 import 'package:proj/screens/profile_screen.dart';
 import 'package:proj/screens/welcome_screen.dart';
 import 'package:proj/screens/subscription_screen.dart';
+import 'package:proj/middleware/auth_guard.dart';
 
 class AppRoutes {
   static const String welcome = '/';
@@ -26,18 +27,22 @@ class AppRoutes {
   static const String charity = '/charity';
   static const String profile = '/profile';
   static const String subscription = '/subscription';
+  
   static Map<String, WidgetBuilder> routes = {
+    // Public routes (no auth required)
     welcome: (context) => const WelcomeScreen(),
     signup: (context) => const CreateAccountScreen(),
     signin: (context) => const SignInScreen(),
-    settings: (context) => const SettingsScreen(),
-    foodDetails: (context) => const FoodDetailsScreen(),
-    cart: (context) => const CartScreen(),
-    home: (context) => const HomeScreen(),
-    browseRestaurants: (context) => const BrowseRestaurantsScreen(),
-    restaurantDetail: (context) => const RestaurantDetailScreen(),
-    charity: (context) => const CharityScreen(),
-    profile: (context) => const ProfileScreen(),
-    subscription: (context) => const SubscriptionScreen(),
+    
+    // Protected routes (auth required)
+    settings: (context) => const AuthGuard(child: SettingsScreen()),
+    foodDetails: (context) => const AuthGuard(child: FoodDetailsScreen()),
+    cart: (context) => const AuthGuard(child: CartScreen()),
+    home: (context) => const AuthGuard(child: HomeScreen()),
+    browseRestaurants: (context) => const AuthGuard(child: BrowseRestaurantsScreen()),
+    restaurantDetail: (context) => const AuthGuard(child: RestaurantDetailScreen()),
+    charity: (context) => const AuthGuard(child: CharityScreen()),
+    profile: (context) => const AuthGuard(child: ProfileScreen()),
+    subscription: (context) => const AuthGuard(child: SubscriptionScreen()),
   };
 }
