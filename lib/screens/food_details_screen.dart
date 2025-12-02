@@ -1,7 +1,84 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:proj/services/auth_service.dart';
+import 'package:proj/services/database_service.dart';
 
-class FoodDetailsScreen extends StatelessWidget {
+class FoodDetailsScreen extends StatefulWidget {
   const FoodDetailsScreen({super.key});
+
+  @override
+  State<FoodDetailsScreen> createState() => _FoodDetailsScreenState();
+}
+
+class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
+  bool _isAddingToCart = false;
+
+  Future<void> _addToCart(BuildContext context, Map? args) async {
+    setState(() => _isAddingToCart = true);
+    
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final dbService = Provider.of<DatabaseService>(context, listen: false);
+      
+      // Get user ID
+      final userId = await authService.getStoredUserId();
+      
+      if (userId == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please login to add items to cart'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        setState(() => _isAddingToCart = false);
+        return;
+      }
+      
+      // Extract food details from arguments
+      final foodId = args?['id'] ?? DateTime.now().millisecondsSinceEpoch.toString();
+      final foodName = args?['name'] ?? 'Surprise Bag';
+      final price = (args?['price'] ?? 4.99).toDouble();
+      final imageUrl = args?['imageUrl'] ?? '';
+      
+      // Add to cart
+      await dbService.addToCart(
+        userId: userId,
+        foodId: foodId,
+        foodName: foodName,
+        foodPrice: price,
+        foodImage: imageUrl,
+        quantity: 1,
+      );
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$foodName added to cart!'),
+            backgroundColor: const Color(0xFF4CAF50),
+            action: SnackBarAction(
+              label: 'VIEW CART',
+              textColor: Colors.white,
+              onPressed: () {
+                Navigator.pushNamed(context, '/cart');
+              },
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error adding to cart: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isAddingToCart = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -292,29 +369,31 @@ class FoodDetailsScreen extends StatelessWidget {
                       width: double.infinity,
                       height: height * 0.065,
                       child: ElevatedButton(
-                        onPressed: () {
-                          // Navigate to cart or show success message
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Added to cart!'),
-                              backgroundColor: Color(0xFF4CAF50),
-                            ),
-                          );
-                        },
+                        onPressed: _isAddingToCart ? null : () => _addToCart(context, args),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF4CAF50),
+                          disabledBackgroundColor: Colors.grey.shade400,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text(
-                          'Add to Cart',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
+                        child: _isAddingToCart
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'Add to Cart',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
                       ),
                     ),
 
