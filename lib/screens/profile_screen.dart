@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:proj/widgets/custom_bottom_nav_bar.dart';
 import 'package:proj/routes/app_routes.dart';
 import 'package:proj/services/data_seeder.dart';
+import 'package:proj/services/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -201,8 +203,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-class _ProfileHeader extends StatelessWidget {
+class _ProfileHeader extends StatefulWidget {
   const _ProfileHeader({super.key});
+
+  @override
+  State<_ProfileHeader> createState() => _ProfileHeaderState();
+}
+
+class _ProfileHeaderState extends State<_ProfileHeader> {
+  String _userEmail = 'Loading...';
+  String _userName = 'User';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      
+      // Get user email from shared preferences
+      final storedEmail = await authService.getStoredUserEmail();
+      
+      setState(() {
+        _userEmail = storedEmail ?? 'No email found';
+        // Extract name from email (first part before @)
+        if (storedEmail != null) {
+          _userName = storedEmail.split('@')[0].replaceAll('.', ' ').split(' ').map((word) => 
+            word.isEmpty ? '' : word[0].toUpperCase() + word.substring(1)
+          ).join(' ');
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _userEmail = 'Error loading email';
+        _userName = 'User';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -256,9 +296,9 @@ class _ProfileHeader extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Ahmed Ali', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+                        Text(_userName, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 4),
-                        Text('ahmedali@email.com', style: TextStyle(color: Colors.green.shade100, fontSize: 13)),
+                        Text(_userEmail, style: TextStyle(color: Colors.green.shade100, fontSize: 13)),
                       ],
                     ),
                   ],
