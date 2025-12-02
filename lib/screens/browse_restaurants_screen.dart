@@ -3,9 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:proj/routes/app_routes.dart';
 import 'package:proj/widgets/custom_bottom_nav_bar.dart';
 import 'package:proj/services/firestore_service.dart';
+import 'package:proj/services/location_service.dart';
 import 'package:proj/models/restaurant_model.dart';
-import 'package:proj/services/database_service.dart';
-import 'package:proj/services/auth_service.dart';
 
 class BrowseRestaurantsScreen extends StatefulWidget {
   const BrowseRestaurantsScreen({super.key});
@@ -15,64 +14,24 @@ class BrowseRestaurantsScreen extends StatefulWidget {
 
 class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
   int _selectedTab = 0;
-  int _currentIndex = 1; // Browse is index 1
+  int _currentIndex = 1; 
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  final DatabaseService _dbService = DatabaseService();
-  Set<String> _favoritedRestaurantIds = {};
-  String? _userId;
-  bool _isLoadingFavorites = true;
+  final LocationService _locationService = LocationService();
+  bool _locationPermissionRequested = false;
 
   @override
   void initState() {
     super.initState();
-    _loadUserFavorites();
+    _requestLocationPermission();
   }
 
-  Future<void> _loadUserFavorites() async {
-    final authService = Provider.of<AuthService>(context, listen: false);
-    _userId = await authService.getStoredUserId();
+  Future<void> _requestLocationPermission() async {
+    if (_locationPermissionRequested) return;
+    _locationPermissionRequested = true;
     
-    if (_userId != null) {
-      final favorites = await _dbService.getFavoriteRestaurants(_userId!);
-      setState(() {
-        _favoritedRestaurantIds = favorites.map((f) => f['restaurant_id'] as String).toSet();
-        _isLoadingFavorites = false;
-      });
-    } else {
-      setState(() {
-        _isLoadingFavorites = false;
-      });
-    }
-  }
-
-  Future<void> _toggleFavorite(Restaurant restaurant) async {
-    if (_userId == null) return;
-
-    setState(() {
-      if (_favoritedRestaurantIds.contains(restaurant.id)) {
-        _favoritedRestaurantIds.remove(restaurant.id);
-      } else {
-        _favoritedRestaurantIds.add(restaurant.id);
-      }
-    });
-
-    if (_favoritedRestaurantIds.contains(restaurant.id)) {
-      await _dbService.addFavoriteRestaurant(
-        userId: _userId!,
-        restaurantId: restaurant.id,
-        restaurantName: restaurant.name,
-        restaurantImage: restaurant.imageUrl,
-        restaurantRating: restaurant.rating,
-        restaurantReviews: restaurant.reviews,
-        restaurantTags: restaurant.tags,
-      );
-    } else {
-      await _dbService.removeFavoriteRestaurant(
-        userId: _userId!,
-        restaurantId: restaurant.id,
-      );
-    }
+    // Request location permission on first use
+    await _locationService.getCurrentPosition();
   }
 
   @override
@@ -82,13 +41,12 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
   }
 
   void _onNavTap(int index) {
-    if (index == _currentIndex) return; // Already on this screen
+    if (index == _currentIndex) return; 
     
     setState(() {
       _currentIndex = index;
     });
 
-    // Navigate to other screens
     if (index == 0) {
       Navigator.pushNamed(context, AppRoutes.home);
     } else if (index == 2) {
@@ -101,7 +59,7 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA), // Match home screen
+      backgroundColor: const Color(0xFFF5F7FA), 
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -166,9 +124,7 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
-              ]
-              
+              ],
             ),
           ),
           
@@ -189,15 +145,49 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                final restaurants = snapshot.data ?? [];
+                List<Restaurant> restaurants = snapshot.data ?? [];
 
-                // Filter restaurants based on search query
-                final filteredRestaurants = _searchQuery.isEmpty
-                    ? restaurants
-                    : restaurants.where((restaurant) {
+                // Calculate distances and add to restaurants
+                List<RestaurantWithDistance> restaurantsWithDistance = restaurants.map((restaurant) {
+                  double? distance = _locationService.getDistanceToRestaurant(
+                    restaurant.latitude,
+                    restaurant.longitude,
+                  );
+                  return RestaurantWithDistance(
+                    restaurant: restaurant,
+                    distance: distance,
+                  );
+                }).toList();
+
+                // Sort by distance for "Nearby" tab (nearest first)
+                if (_selectedTab == 0) {
+                  restaurantsWithDistance.sort((a, b) {
+  
+                    if (a.distance == null && b.distance == null) return 0;
+                    if (a.distance == null) return 1; 
+                    if (b.distance == null) return -1;
+                    return a.distance!.compareTo(b.distance!);
+                  });
+                }
+
+                // Filter restaurants based on search query             
+                List<RestaurantWithDistance> filteredRestaurants = _searchQuery.isEmpty
+                    ? restaurantsWithDistance
+                    : restaurantsWithDistance.where((item) {
+                        final restaurant = item.restaurant;
                         return restaurant.name.toLowerCase().contains(_searchQuery) ||
                                restaurant.tags.any((tag) => tag.toLowerCase().contains(_searchQuery));
                       }).toList();
+                
+                // Re-sort filtered results by distance if in Nearby tab (to ensure sort is preserved)
+                if (_selectedTab == 0) {
+                  filteredRestaurants.sort((a, b) {
+                    if (a.distance == null && b.distance == null) return 0;
+                    if (a.distance == null) return 1;
+                    if (b.distance == null) return -1;
+                    return a.distance!.compareTo(b.distance!);
+                  });
+                }
 
                 if (filteredRestaurants.isEmpty) {
                   return const Center(
@@ -208,21 +198,26 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
                   );
                 }
 
-
                 return ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: filteredRestaurants.length,
                   itemBuilder: (context, index) {
-                    final restaurant = filteredRestaurants[index];
-                    final isFavorited = _favoritedRestaurantIds.contains(restaurant.id);
-                    
+                    final item = filteredRestaurants[index];
+                    final restaurant = item.restaurant;
                     return Column(
                       children: [
                         _buildRestaurantCard(
-                          restaurant,
-                          isFavorited,
-                          0.5, // distance
+                          restaurant.id,
+                          'Available',
+                          restaurant.name,
+                          restaurant.rating,
+                          restaurant.reviews,
+                          item.distance, 
+                          restaurant.tags,
                           'Pick up today',
+                          restaurant.imageUrl,
+                          restaurant.hasDelivery,
+                          restaurant.hasPickup,
                         ),
                         const SizedBox(height: 16),
                       ],
@@ -270,10 +265,17 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
   }
 
   Widget _buildRestaurantCard(
-    Restaurant restaurant,
-    bool isFavorited,
-    double distance,
+    String id,
+    String availability,
+    String name,
+    double rating,
+    int reviews,
+    double? distance,
+    List<String> tags,
     String pickupTime,
+    String imageUrl,
+    bool hasDelivery,
+    bool hasPickup,
   ) {
     return GestureDetector(
       onTap: () {
@@ -281,12 +283,12 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
           context,
           AppRoutes.restaurantDetail,
           arguments: {
-            'id': restaurant.id,
-            'name': restaurant.name,
-            'rating': restaurant.rating,
-            'reviews': restaurant.reviews,
-            'tags': restaurant.tags,
-            'image': restaurant.imageUrl,
+            'id': id,
+            'name': name,
+            'rating': rating,
+            'reviews': reviews,
+            'tags': tags,
+            'image': imageUrl,
           },
         );
       },
@@ -321,7 +323,7 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
                   ClipRRect(
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                     child: Image.network(
-                      restaurant.imageUrl,
+                      imageUrl,
                       width: double.infinity,
                       height: 200,
                       fit: BoxFit.cover,
@@ -330,40 +332,13 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
                       ),
                     ),
                   ),
-                  // Favorite Button
-                  Positioned(
-                    top: 16,
-                    left: 16,
-                    child: GestureDetector(
-                      onTap: () => _toggleFavorite(restaurant),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          isFavorited ? Icons.favorite : Icons.favorite_border,
-                          color: isFavorited ? Colors.red : Colors.grey[700],
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Delivery/Pickup Badges
+                  
                   Positioned(
                     top: 16,
                     right: 16,
                     child: Row(
                       children: [
-                        if (restaurant.hasPickup)
+                        if (hasPickup)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
@@ -381,8 +356,8 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
                               ],
                             ),
                           ),
-                        if (restaurant.hasPickup && restaurant.hasDelivery) const SizedBox(width: 8),
-                        if (restaurant.hasDelivery)
+                        if (hasPickup && hasDelivery) const SizedBox(width: 8),
+                        if (hasDelivery)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
@@ -413,7 +388,7 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    restaurant.name,
+                    name,
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -426,7 +401,7 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
                       const Icon(Icons.star, color: Colors.amber, size: 20),
                       const SizedBox(width: 4),
                       Text(
-                        '${restaurant.rating} (${restaurant.reviews})',
+                        '$rating ($reviews)',
                         style: const TextStyle(
                           fontWeight: FontWeight.w500,
                           fontSize: 14,
@@ -436,7 +411,9 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
                       const Icon(Icons.location_on, color: Colors.grey, size: 16),
                       const SizedBox(width: 4),
                       Text(
-                        '${distance.toStringAsFixed(1)} mi',
+                        distance != null 
+                            ? '${distance.toStringAsFixed(1)} mi'
+                            : 'Distance unavailable',
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 14,
@@ -448,7 +425,7 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: restaurant.tags.map((tag) {
+                    children: tags.map((tag) {
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
@@ -489,4 +466,15 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
       ),
     );
   }
+}
+
+// Helper class to store restaurant with calculated distance
+class RestaurantWithDistance {
+  final Restaurant restaurant;
+  final double? distance;
+
+  RestaurantWithDistance({
+    required this.restaurant,
+    this.distance,
+  });
 }
