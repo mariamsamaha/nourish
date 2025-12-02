@@ -15,6 +15,7 @@ class _SignInScreenState extends State<SignInScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
 
   @override
   void dispose() {
@@ -163,22 +164,51 @@ class _SignInScreenState extends State<SignInScreen> {
                   width: double.infinity,
                   height: height * 0.065,
                   child: OutlinedButton(
-                    onPressed: () {},
+                    onPressed: _isGoogleLoading ? null : () async {
+                      setState(() {
+                        _isGoogleLoading = true;
+                      });
+                      
+                      try {
+                        await _authService.signInWithGoogle();
+                        
+                        if (mounted) {
+                          Navigator.pushReplacementNamed(context, AppRoutes.home);
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(e.toString()),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      } finally {
+                        if (mounted) {
+                          setState(() {
+                            _isGoogleLoading = false;
+                          });
+                        }
+                      }
+                    },
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(color: Colors.grey.shade300),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.email_outlined, color: Colors.black87), // Placeholder for Google icon
-                        SizedBox(width: 10),
-                        Text(
-                          "Continue with Google",
-                          style: TextStyle(fontSize: 16, color: Colors.black87, fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
+                    child: _isGoogleLoading
+                        ? const CircularProgressIndicator()
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Icon(Icons.email_outlined, color: Colors.black87), // Placeholder for Google icon
+                              SizedBox(width: 10),
+                              Text(
+                                "Continue with Google",
+                                style: TextStyle(fontSize: 16, color: Colors.black87, fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
                   ),
                 ),
 

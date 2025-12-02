@@ -1,5 +1,6 @@
-package com.example.proj
+package com.nourish.app
 
 import io.flutter.embedding.android.FlutterActivity
 
 class MainActivity : FlutterActivity()
+

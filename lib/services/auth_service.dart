@@ -1,8 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'auth_storage_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
   final AuthStorageService _storage = AuthStorageService();
 
   // Get current user
@@ -70,9 +72,49 @@ class AuthService {
     }
   }
 
+  // Sign in with Google
+  Future<UserCredential> signInWithGoogle() async {
+    try {
+      // Trigger the Google Sign-In flow
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      
+      // If user cancels the sign-in flow
+      if (googleUser == null) {
+        throw 'Google sign-in was cancelled';
+      }
+
+      // Obtain the auth details from the request
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      // Create a new credential
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Sign in to Firebase with the Google credential
+      final userCredential = await _auth.signInWithCredential(credential);
+      
+      // Save user data to shared preferences
+      if (userCredential.user != null) {
+        await _storage.saveUserData(
+          userId: userCredential.user!.uid,
+          email: userCredential.user!.email ?? googleUser.email,
+        );
+      }
+      
+      return userCredential;
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw 'Failed to sign in with Google: ${e.toString()}';
+    }
+  }
+
   // Sign out
   Future<void> signOut() async {
     await _auth.signOut();
+    await _googleSignIn.signOut();
     // Clear stored user data from shared preferences
     await _storage.clearUserData();
   }

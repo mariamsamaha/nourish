@@ -12,7 +12,12 @@
           "package_name": "com.example.proj"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "413198671972-vbsa3so5256jf23ffm5o2ug5qdnrv3tu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB_ZQI09ytX25zcCDVrxiRiTyD152vHNL4"
@@ -20,7 +25,63 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "413198671972-vbsa3so5256jf23ffm5o2ug5qdnrv3tu.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "413198671972-5hb9qabpiq743u60ngmavoc8lf53vih8.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.proj"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:413198671972:android:b1bcf74b7d2d470813bf71",
+        "android_client_info": {
+          "package_name": "com.nourish.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "413198671972-u6d3h3men22vo2m44rcbsrjdsj64maf6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.nourish.app",
+            "certificate_hash": "f11cd27b85754627f06ad8f9e6219d8a4ab1a458"
+          }
+        },
+        {
+          "client_id": "413198671972-vbsa3so5256jf23ffm5o2ug5qdnrv3tu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_ZQI09ytX25zcCDVrxiRiTyD152vHNL4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "413198671972-vbsa3so5256jf23ffm5o2ug5qdnrv3tu.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "413198671972-5hb9qabpiq743u60ngmavoc8lf53vih8.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.proj"
+              }
+            }
+          ]
         }
       }
     }
