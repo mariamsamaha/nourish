@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:proj/services/auth_service.dart';
 import 'package:proj/services/database_service.dart';
+import 'package:proj/services/location_service.dart';
 import 'package:proj/routes/app_routes.dart';
 
 class HomeAppBar extends StatefulWidget {
@@ -13,18 +14,30 @@ class HomeAppBar extends StatefulWidget {
 
 class _HomeAppBarState extends State<HomeAppBar> {
   int _cartItemCount = 0;
+  final LocationService _locationService = LocationService();
+  bool _isLoadingLocation = true;
 
   @override
   void initState() {
     super.initState();
     _loadCartItemCount();
+    _initializeLocation();
+  }
+
+  Future<void> _initializeLocation() async {
+    await _locationService.getCurrentPosition();
+    if (mounted) {
+      setState(() {
+        _isLoadingLocation = false;
+      });
+    }
   }
 
   Future<void> _loadCartItemCount() async {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       final dbService = Provider.of<DatabaseService>(context, listen: false);
-      
+
       final userId = await authService.getStoredUserId();
       if (userId != null) {
         final count = await dbService.getCartItemCount(userId);
@@ -76,9 +89,12 @@ class _HomeAppBarState extends State<HomeAppBar> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const Text(
-                      "Downtown SF",
-                      style: TextStyle(
+                    Text(
+                      _isLoadingLocation
+                          ? "Getting location..."
+                          : _locationService.currentCityName ??
+                                "Location unavailable",
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
@@ -91,7 +107,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
               ],
             ),
           ),
-          
+
           // Cart Icon with Badge
           InkWell(
             onTap: () {
@@ -135,7 +151,9 @@ class _HomeAppBarState extends State<HomeAppBar> {
                           minHeight: 18,
                         ),
                         child: Text(
-                          _cartItemCount > 99 ? '99+' : _cartItemCount.toString(),
+                          _cartItemCount > 99
+                              ? '99+'
+                              : _cartItemCount.toString(),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 10,

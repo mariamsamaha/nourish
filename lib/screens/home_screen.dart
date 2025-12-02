@@ -6,6 +6,7 @@ import 'package:proj/widgets/offer_card.dart';
 import 'package:proj/routes/app_routes.dart';
 import 'package:proj/services/firestore_service.dart';
 import 'package:proj/models/food_item_model.dart';
+import 'package:proj/utils/update_restaurants_egypt.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -29,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _currentIndex = index;
     });
-    
+
     // Handle navigation for Browse tab
     if (index == 1) {
       Navigator.pushNamed(context, AppRoutes.browseRestaurants);
@@ -83,9 +84,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           decoration: InputDecoration(
                             hintText: "Search for food or restaurants...",
                             hintStyle: TextStyle(color: Colors.grey.shade400),
-                            prefixIcon: Icon(Icons.search, color: Colors.grey.shade400),
+                            prefixIcon: Icon(
+                              Icons.search,
+                              color: Colors.grey.shade400,
+                            ),
                             border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                            ),
                           ),
                         ),
                       ),
@@ -125,14 +131,21 @@ class _HomeScreenState extends State<HomeScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
                       child: StreamBuilder<List<FoodItem>>(
-                        stream: Provider.of<FirestoreService>(context).getBestOffers(limit: 5),
+                        stream: Provider.of<FirestoreService>(
+                          context,
+                        ).getBestOffers(limit: 5),
                         builder: (context, snapshot) {
                           if (snapshot.hasError) {
-                            return Center(child: Text('Error: ${snapshot.error}'));
+                            return Center(
+                              child: Text('Error: ${snapshot.error}'),
+                            );
                           }
 
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const Center(child: CircularProgressIndicator());
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
                           }
 
                           final foodItems = snapshot.data ?? [];
@@ -141,15 +154,22 @@ class _HomeScreenState extends State<HomeScreen> {
                           final filteredItems = _searchQuery.isEmpty
                               ? foodItems
                               : foodItems.where((item) {
-                                  return item.name.toLowerCase().contains(_searchQuery) ||
-                                         (item.restaurantName?.toLowerCase().contains(_searchQuery) ?? false);
+                                  return item.name.toLowerCase().contains(
+                                        _searchQuery,
+                                      ) ||
+                                      (item.restaurantName
+                                              ?.toLowerCase()
+                                              .contains(_searchQuery) ??
+                                          false);
                                 }).toList();
 
                           if (filteredItems.isEmpty) {
                             return const Center(
                               child: Padding(
                                 padding: EdgeInsets.all(20.0),
-                                child: Text('No surprise bags available right now.'),
+                                child: Text(
+                                  'No surprise bags available right now.',
+                                ),
                               ),
                             );
                           }
@@ -157,17 +177,24 @@ class _HomeScreenState extends State<HomeScreen> {
                           return Column(
                             children: filteredItems.map((item) {
                               // Calculate discount percent
-                              final discount = ((item.originalPrice - item.price) / item.originalPrice * 100).round();
-                              
+                              final discount =
+                                  ((item.originalPrice - item.price) /
+                                          item.originalPrice *
+                                          100)
+                                      .round();
+
                               return OfferCard(
                                 title: item.name,
                                 storeName: item.restaurantName ?? "Restaurant",
                                 distance: "0.5 mi", // TODO: Calculate distance
-                                originalPrice: "\$${item.originalPrice.toStringAsFixed(2)}",
-                                discountedPrice: "\$${item.price.toStringAsFixed(2)}",
+                                originalPrice:
+                                    "\$${item.originalPrice.toStringAsFixed(2)}",
+                                discountedPrice:
+                                    "\$${item.price.toStringAsFixed(2)}",
                                 pickupTime: item.pickupTime,
                                 quantityLeft: "${item.quantity} left",
-                                imageColor: Colors.orange.shade400, // Placeholder
+                                imageColor:
+                                    Colors.orange.shade400, // Placeholder
                                 icon: Icons.bakery_dining, // Placeholder
                                 discountPercent: "$discount% OFF",
                                 restaurantId: item.restaurantId,
@@ -190,7 +217,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                       ),
                     ),
-                    
+
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -202,6 +229,13 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _currentIndex,
         onTap: _onNavTap,
+      ),
+      // TEMPORARY: Fix button to update restaurants to Egypt
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => updateRestaurantsToEgypt(context),
+        backgroundColor: Colors.orange,
+        icon: const Icon(Icons.location_city),
+        label: const Text('Fix Egypt Locations'),
       ),
     );
   }
