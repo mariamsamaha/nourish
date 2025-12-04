@@ -33,7 +33,10 @@ class _SignInScreenState extends State<SignInScreen> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: width * 0.08, vertical: height * 0.04),
+          padding: EdgeInsets.symmetric(
+            horizontal: width * 0.08,
+            vertical: height * 0.04,
+          ),
           child: Form(
             key: _formKey,
             child: Column(
@@ -45,10 +48,15 @@ class _SignInScreenState extends State<SignInScreen> {
                     Container(
                       padding: EdgeInsets.all(width * 0.03),
                       decoration: BoxDecoration(
-                        color: Colors.green.shade500, // Darker green as per image
+                        color:
+                            Colors.green.shade500, // Darker green as per image
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Icon(Icons.eco, color: Colors.white, size: 28),
+                      child: const Icon(
+                        Icons.eco,
+                        color: Colors.white,
+                        size: 28,
+                      ),
                     ),
                     SizedBox(width: width * 0.04),
                     const Text(
@@ -68,12 +76,23 @@ class _SignInScreenState extends State<SignInScreen> {
                 SizedBox(height: height * 0.06),
 
                 // Email
-                _buildField("Email", "you@example.com", _emailController, TextInputType.emailAddress),
+                _buildField(
+                  "Email",
+                  "you@example.com",
+                  _emailController,
+                  TextInputType.emailAddress,
+                ),
 
                 SizedBox(height: height * 0.03),
 
                 // Password
-                _buildField("Password", "••••••••", _passwordController, TextInputType.visiblePassword, obscure: true),
+                _buildField(
+                  "Password",
+                  "••••••••",
+                  _passwordController,
+                  TextInputType.visiblePassword,
+                  obscure: true,
+                ),
 
                 SizedBox(height: height * 0.02),
 
@@ -85,7 +104,10 @@ class _SignInScreenState extends State<SignInScreen> {
                     style: TextButton.styleFrom(padding: EdgeInsets.zero),
                     child: const Text(
                       "Forgot password?",
-                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -97,48 +119,59 @@ class _SignInScreenState extends State<SignInScreen> {
                   width: double.infinity,
                   height: height * 0.065,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : () async {
-                      if (_formKey.currentState!.validate()) {
-                        setState(() {
-                          _isLoading = true;
-                        });
-                        
-                        try {
-                          await _authService.signInWithEmail(
-                            _emailController.text.trim(),
-                            _passwordController.text,
-                          );
-                          
-                          if (mounted) {
-                            Navigator.pushReplacementNamed(context, AppRoutes.home);
-                          }
-                        } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(e.toString()),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        } finally {
-                          if (mounted) {
-                            setState(() {
-                              _isLoading = false;
-                            });
-                          }
-                        }
-                      }
-                    },
+                    onPressed: _isLoading
+                        ? null
+                        : () async {
+                            if (_formKey.currentState!.validate()) {
+                              setState(() {
+                                _isLoading = true;
+                              });
+
+                              try {
+                                await _authService.signInWithEmail(
+                                  _emailController.text.trim(),
+                                  _passwordController.text,
+                                );
+
+                                if (mounted) {
+                                  Navigator.pushReplacementNamed(
+                                    context,
+                                    AppRoutes.home,
+                                  );
+                                }
+                              } catch (e) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(e.toString()),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              } finally {
+                                if (mounted) {
+                                  setState(() {
+                                    _isLoading = false;
+                                  });
+                                }
+                              }
+                            }
+                          },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green.shade600,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
                         : const Text(
                             "Sign In",
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
                           ),
                   ),
                 ),
@@ -151,7 +184,10 @@ class _SignInScreenState extends State<SignInScreen> {
                     Expanded(child: Divider(color: Colors.grey.shade300)),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Text("or", style: TextStyle(color: Colors.grey.shade500)),
+                      child: Text(
+                        "or",
+                        style: TextStyle(color: Colors.grey.shade500),
+                      ),
                     ),
                     Expanded(child: Divider(color: Colors.grey.shade300)),
                   ],
@@ -164,48 +200,62 @@ class _SignInScreenState extends State<SignInScreen> {
                   width: double.infinity,
                   height: height * 0.065,
                   child: OutlinedButton(
-                    onPressed: _isGoogleLoading ? null : () async {
-                      setState(() {
-                        _isGoogleLoading = true;
-                      });
-                      
-                      try {
-                        await _authService.signInWithGoogle();
-                        
-                        if (mounted) {
-                          Navigator.pushReplacementNamed(context, AppRoutes.home);
-                        }
-                      } catch (e) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(e.toString()),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      } finally {
-                        if (mounted) {
-                          setState(() {
-                            _isGoogleLoading = false;
-                          });
-                        }
-                      }
-                    },
+                    onPressed: _isGoogleLoading
+                        ? null
+                        : () async {
+                            setState(() {
+                              _isGoogleLoading = true;
+                            });
+
+                            try {
+                              await _authService.signInWithGoogle();
+
+                              if (mounted) {
+                                Navigator.pushReplacementNamed(
+                                  context,
+                                  AppRoutes.home,
+                                );
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(e.toString()),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            } finally {
+                              if (mounted) {
+                                setState(() {
+                                  _isGoogleLoading = false;
+                                });
+                              }
+                            }
+                          },
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(color: Colors.grey.shade300),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: _isGoogleLoading
                         ? const CircularProgressIndicator()
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: const [
-                              Icon(Icons.email_outlined, color: Colors.black87), // Placeholder for Google icon
+                              Icon(
+                                Icons.email_outlined,
+                                color: Colors.black87,
+                              ), // Placeholder for Google icon
                               SizedBox(width: 10),
                               Text(
                                 "Continue with Google",
-                                style: TextStyle(fontSize: 16, color: Colors.black87, fontWeight: FontWeight.w600),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black87,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ],
                           ),
@@ -228,7 +278,10 @@ class _SignInScreenState extends State<SignInScreen> {
                       },
                       child: const Text(
                         "Sign Up",
-                        style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -251,13 +304,17 @@ class _SignInScreenState extends State<SignInScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+        Text(
+          label,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+        ),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
           obscureText: obscure,
           keyboardType: type,
-          validator: (val) => val == null || val.isEmpty ? "Enter $label" : null,
+          validator: (val) =>
+              val == null || val.isEmpty ? "Enter $label" : null,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(color: Colors.grey.shade400),
@@ -267,7 +324,10 @@ class _SignInScreenState extends State<SignInScreen> {
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
           ),
         ),
       ],

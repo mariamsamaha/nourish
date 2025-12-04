@@ -18,9 +18,9 @@ class DatabaseService {
     if (kIsWeb) {
       throw Exception('SQLite not used on web platform');
     }
-    
+
     if (_database != null) return _database!;
-    
+
     _database = await _initDatabase();
     return _database!;
   }
@@ -28,10 +28,10 @@ class DatabaseService {
   /// Initialize the SQLite database (mobile/desktop only)
   Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), 'nourish.db');
-    
+
     return await openDatabase(
       path,
-      version: 4,  // Updated version
+      version: 4, // Updated version
       onCreate: (Database db, int version) async {
         await db.execute('''
           CREATE TABLE $_tableName (
@@ -46,7 +46,7 @@ class DatabaseService {
             UNIQUE(user_id, food_id)
           )
         ''');
-        
+
         await db.execute('''
           CREATE TABLE user_charity_preferences (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -56,7 +56,7 @@ class DatabaseService {
             UNIQUE(user_id, charity_id)
           )
         ''');
-        
+
         await db.execute('''
           CREATE TABLE favorite_restaurants (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,7 +71,7 @@ class DatabaseService {
             UNIQUE(user_id, restaurant_id)
           )
         ''');
-        
+
         await db.execute('''
           CREATE TABLE profile_images (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -130,26 +130,28 @@ class DatabaseService {
   Future<Map<String, List<Map<String, dynamic>>>> _loadCartFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     final cartJson = prefs.getString(_cartPrefsKey);
-    
+
     if (cartJson == null) {
       return {};
     }
-    
+
     try {
       final Map<String, dynamic> decoded = json.decode(cartJson);
       final Map<String, List<Map<String, dynamic>>> result = {};
-      
+
       decoded.forEach((userId, items) {
         result[userId] = List<Map<String, dynamic>>.from(items);
       });
-      
+
       return result;
     } catch (e) {
       return {};
     }
   }
 
-  Future<void> _saveCartToPrefs(Map<String, List<Map<String, dynamic>>> cartData) async {
+  Future<void> _saveCartToPrefs(
+    Map<String, List<Map<String, dynamic>>> cartData,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     final cartJson = json.encode(cartData);
     await prefs.setString(_cartPrefsKey, cartJson);
@@ -170,13 +172,16 @@ class DatabaseService {
       // Web implementation using SharedPreferences
       final cartData = await _loadCartFromPrefs();
       final userCart = cartData[userId] ?? [];
-      
+
       // Check if item already exists
-      final existingIndex = userCart.indexWhere((item) => item['food_id'] == foodId);
-      
+      final existingIndex = userCart.indexWhere(
+        (item) => item['food_id'] == foodId,
+      );
+
       if (existingIndex != -1) {
         // Update quantity
-        userCart[existingIndex]['quantity'] = (userCart[existingIndex]['quantity'] as int) + quantity;
+        userCart[existingIndex]['quantity'] =
+            (userCart[existingIndex]['quantity'] as int) + quantity;
       } else {
         // Add new item
         userCart.add({
@@ -188,13 +193,13 @@ class DatabaseService {
           'created_at': DateTime.now().toIso8601String(),
         });
       }
-      
+
       cartData[userId] = userCart;
       await _saveCartToPrefs(cartData);
     } else {
       // Mobile/Desktop implementation using SQLite
       final db = await database;
-      
+
       final existingItem = await db.query(
         _tableName,
         where: 'user_id = ? AND food_id = ?',
@@ -210,19 +215,15 @@ class DatabaseService {
           whereArgs: [userId, foodId],
         );
       } else {
-        await db.insert(
-          _tableName,
-          {
-            'user_id': userId,
-            'food_id': foodId,
-            'food_name': foodName,
-            'food_price': foodPrice,
-            'food_image': foodImage,
-            'quantity': quantity,
-            'created_at': DateTime.now().toIso8601String(),
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        await db.insert(_tableName, {
+          'user_id': userId,
+          'food_id': foodId,
+          'food_name': foodName,
+          'food_price': foodPrice,
+          'food_image': foodImage,
+          'quantity': quantity,
+          'created_at': DateTime.now().toIso8601String(),
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
     }
   }
@@ -260,8 +261,10 @@ class DatabaseService {
       // Web implementation
       final cartData = await _loadCartFromPrefs();
       final userCart = cartData[userId] ?? [];
-      
-      final itemIndex = userCart.indexWhere((item) => item['food_id'] == foodId);
+
+      final itemIndex = userCart.indexWhere(
+        (item) => item['food_id'] == foodId,
+      );
       if (itemIndex != -1) {
         userCart[itemIndex]['quantity'] = quantity;
         cartData[userId] = userCart;
@@ -288,7 +291,7 @@ class DatabaseService {
       // Web implementation
       final cartData = await _loadCartFromPrefs();
       final userCart = cartData[userId] ?? [];
-      
+
       userCart.removeWhere((item) => item['food_id'] == foodId);
       cartData[userId] = userCart;
       await _saveCartToPrefs(cartData);
@@ -313,11 +316,7 @@ class DatabaseService {
     } else {
       // Mobile/Desktop implementation
       final db = await database;
-      await db.delete(
-        _tableName,
-        where: 'user_id = ?',
-        whereArgs: [userId],
-      );
+      await db.delete(_tableName, where: 'user_id = ?', whereArgs: [userId]);
     }
   }
 
@@ -327,7 +326,10 @@ class DatabaseService {
       // Web implementation
       final cartData = await _loadCartFromPrefs();
       final userCart = cartData[userId] ?? [];
-      return userCart.fold<int>(0, (sum, item) => sum + (item['quantity'] as int));
+      return userCart.fold<int>(
+        0,
+        (sum, item) => sum + (item['quantity'] as int),
+      );
     } else {
       // Mobile/Desktop implementation
       final db = await database;
@@ -335,7 +337,7 @@ class DatabaseService {
         'SELECT SUM(quantity) as total FROM $_tableName WHERE user_id = ?',
         [userId],
       );
-      
+
       return result.first['total'] as int? ?? 0;
     }
   }
@@ -346,8 +348,11 @@ class DatabaseService {
       // Web implementation
       final cartData = await _loadCartFromPrefs();
       final userCart = cartData[userId] ?? [];
-      return userCart.fold<double>(0.0, (sum, item) => 
-        sum + ((item['food_price'] as double) * (item['quantity'] as int)));
+      return userCart.fold<double>(
+        0.0,
+        (sum, item) =>
+            sum + ((item['food_price'] as double) * (item['quantity'] as int)),
+      );
     } else {
       // Mobile/Desktop implementation
       final db = await database;
@@ -355,7 +360,7 @@ class DatabaseService {
         'SELECT SUM(food_price * quantity) as total FROM $_tableName WHERE user_id = ?',
         [userId],
       );
-      
+
       return result.first['total'] as double? ?? 0.0;
     }
   }
@@ -368,19 +373,19 @@ class DatabaseService {
   Future<Map<String, List<String>>> _loadCharityPrefsFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     final prefsJson = prefs.getString(_charityPrefsKey);
-    
+
     if (prefsJson == null) {
       return {};
     }
-    
+
     try {
       final Map<String, dynamic> decoded = json.decode(prefsJson);
       final Map<String, List<String>> result = {};
-      
+
       decoded.forEach((userId, charityIds) {
         result[userId] = List<String>.from(charityIds);
       });
-      
+
       return result;
     } catch (e) {
       return {};
@@ -388,7 +393,9 @@ class DatabaseService {
   }
 
   /// Save charity preferences to SharedPreferences (web only)
-  Future<void> _saveCharityPrefsToPrefs(Map<String, List<String>> prefsData) async {
+  Future<void> _saveCharityPrefsToPrefs(
+    Map<String, List<String>> prefsData,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     final prefsJson = json.encode(prefsData);
     await prefs.setString(_charityPrefsKey, prefsJson);
@@ -403,7 +410,7 @@ class DatabaseService {
       // Web implementation
       final prefsData = await _loadCharityPrefsFromPrefs();
       final userCharities = prefsData[userId] ?? [];
-      
+
       if (!userCharities.contains(charityId)) {
         userCharities.add(charityId);
         prefsData[userId] = userCharities;
@@ -412,17 +419,13 @@ class DatabaseService {
     } else {
       // Mobile/Desktop implementation
       final db = await database;
-      
+
       try {
-        await db.insert(
-          'user_charity_preferences',
-          {
-            'user_id': userId,
-            'charity_id': charityId,
-            'created_at': DateTime.now().toIso8601String(),
-          },
-          conflictAlgorithm: ConflictAlgorithm.ignore,
-        );
+        await db.insert('user_charity_preferences', {
+          'user_id': userId,
+          'charity_id': charityId,
+          'created_at': DateTime.now().toIso8601String(),
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
       } catch (e) {
         // Ignore if already exists
       }
@@ -438,7 +441,7 @@ class DatabaseService {
       // Web implementation
       final prefsData = await _loadCharityPrefsFromPrefs();
       final userCharities = prefsData[userId] ?? [];
-      
+
       userCharities.remove(charityId);
       prefsData[userId] = userCharities;
       await _saveCharityPrefsToPrefs(prefsData);
@@ -468,7 +471,7 @@ class DatabaseService {
         where: 'user_id = ?',
         whereArgs: [userId],
       );
-      
+
       return results.map((row) => row['charity_id'] as String).toList();
     }
   }
@@ -491,7 +494,7 @@ class DatabaseService {
         where: 'user_id = ? AND charity_id = ?',
         whereArgs: [userId, charityId],
       );
-      
+
       return results.isNotEmpty;
     }
   }
@@ -517,33 +520,29 @@ class DatabaseService {
           .collection('restaurants')
           .doc(restaurantId)
           .set({
-        'restaurant_id': restaurantId,
-        'restaurant_name': restaurantName,
-        'restaurant_image': restaurantImage,
-        'restaurant_rating': restaurantRating,
-        'restaurant_reviews': restaurantReviews,
-        'restaurant_tags': restaurantTags,
-        'created_at': FieldValue.serverTimestamp(),
-      });
-    } else {
-      // MOBILE: Save to SQLite
-      final db = await database;
-      
-      try {
-        await db.insert(
-          'favorite_restaurants',
-          {
-            'user_id': userId,
             'restaurant_id': restaurantId,
             'restaurant_name': restaurantName,
             'restaurant_image': restaurantImage,
             'restaurant_rating': restaurantRating,
             'restaurant_reviews': restaurantReviews,
-            'restaurant_tags': restaurantTags?.join(','),
-            'created_at': DateTime.now().toIso8601String(),
-          },
-          conflictAlgorithm: ConflictAlgorithm.ignore,
-        );
+            'restaurant_tags': restaurantTags,
+            'created_at': FieldValue.serverTimestamp(),
+          });
+    } else {
+      // MOBILE: Save to SQLite
+      final db = await database;
+
+      try {
+        await db.insert('favorite_restaurants', {
+          'user_id': userId,
+          'restaurant_id': restaurantId,
+          'restaurant_name': restaurantName,
+          'restaurant_image': restaurantImage,
+          'restaurant_rating': restaurantRating,
+          'restaurant_reviews': restaurantReviews,
+          'restaurant_tags': restaurantTags?.join(','),
+          'created_at': DateTime.now().toIso8601String(),
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
       } catch (e) {
         // Ignore if already exists
       }
@@ -576,7 +575,9 @@ class DatabaseService {
   }
 
   /// Get all favorite restaurants for a user (Firestore on web, SQLite on mobile)
-  Future<List<Map<String, dynamic>>> getFavoriteRestaurants(String userId) async {
+  Future<List<Map<String, dynamic>>> getFavoriteRestaurants(
+    String userId,
+  ) async {
     if (kIsWeb) {
       // WEB: Load from Firestore
       final firestore = FirebaseFirestore.instance;
@@ -586,13 +587,10 @@ class DatabaseService {
           .collection('restaurants')
           .orderBy('created_at', descending: true)
           .get();
-      
+
       return snapshot.docs.map((doc) {
         final data = doc.data();
-        return {
-          ...data,
-          'restaurant_id': doc.id,
-        };
+        return {...data, 'restaurant_id': doc.id};
       }).toList();
     } else {
       // MOBILE: Load from SQLite
@@ -603,13 +601,15 @@ class DatabaseService {
         whereArgs: [userId],
         orderBy: 'created_at DESC',
       );
-      
+
       // Parse tags back to list
       return results.map((row) {
         final tags = row['restaurant_tags'] as String?;
         return {
           ...row,
-          'restaurant_tags': tags != null && tags.isNotEmpty ? tags.split(',') : <String>[],
+          'restaurant_tags': tags != null && tags.isNotEmpty
+              ? tags.split(',')
+              : <String>[],
         };
       }).toList();
     }
@@ -629,7 +629,7 @@ class DatabaseService {
           .collection('restaurants')
           .doc(restaurantId)
           .get();
-      
+
       return doc.exists;
     } else {
       // MOBILE: Check in SQLite
@@ -639,7 +639,7 @@ class DatabaseService {
         where: 'user_id = ? AND restaurant_id = ?',
         whereArgs: [userId, restaurantId],
       );
-      
+
       return results.isNotEmpty;
     }
   }
@@ -660,16 +660,12 @@ class DatabaseService {
     } else {
       // Mobile: use SQLite
       final db = await database;
-      await db.insert(
-        'profile_images',
-        {
-          'user_id': userId,
-          'email': userEmail,
-          'image_base64': imageBase64,
-          'updated_at': DateTime.now().toIso8601String(),
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await db.insert('profile_images', {
+        'user_id': userId,
+        'email': userEmail,
+        'image_base64': imageBase64,
+        'updated_at': DateTime.now().toIso8601String(),
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
   }
 
@@ -687,7 +683,7 @@ class DatabaseService {
         where: 'user_id = ?',
         whereArgs: [userId],
       );
-      
+
       if (results.isNotEmpty) {
         return results.first['image_base64'] as String?;
       }

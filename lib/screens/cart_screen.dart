@@ -27,11 +27,11 @@ class _CartScreenState extends State<CartScreen> {
 
   Future<void> _loadCart() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       final dbService = Provider.of<DatabaseService>(context, listen: false);
-      
+
       final userId = await authService.getStoredUserId();
       if (userId != null) {
         final items = await dbService.getCartItems(userId);
@@ -46,16 +46,16 @@ class _CartScreenState extends State<CartScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading cart: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading cart: $e')));
       }
     }
   }
 
   Future<void> _updateQuantity(String foodId, int newQuantity) async {
     if (_userId == null) return;
-    
+
     try {
       final dbService = Provider.of<DatabaseService>(context, listen: false);
       await dbService.updateQuantity(
@@ -65,34 +65,31 @@ class _CartScreenState extends State<CartScreen> {
       );
       await _loadCart(); // Reload cart
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating quantity: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error updating quantity: $e')));
     }
   }
 
   Future<void> _removeItem(String foodId, String foodName) async {
     if (_userId == null) return;
-    
+
     try {
       final dbService = Provider.of<DatabaseService>(context, listen: false);
-      await dbService.removeFromCart(
-        userId: _userId!,
-        foodId: foodId,
-      );
-      
+      await dbService.removeFromCart(userId: _userId!, foodId: foodId);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('$foodName removed from cart'),
           backgroundColor: const Color(0xFF4CAF50),
         ),
       );
-      
+
       await _loadCart(); // Reload cart
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error removing item: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error removing item: $e')));
     }
   }
 
@@ -127,139 +124,167 @@ class _CartScreenState extends State<CartScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _cartItems.isEmpty
-              ? _buildEmptyCart()
-              : SingleChildScrollView(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: width * 0.04),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: height * 0.02),
-                        
-                        // Cart Items
-                        ..._cartItems.map((item) => Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: _buildCartItem(item),
-                        )).toList(),
+          ? _buildEmptyCart()
+          : SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: width * 0.04),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: height * 0.02),
 
-                        SizedBox(height: height * 0.02),
+                    // Cart Items
+                    ..._cartItems
+                        .map(
+                          (item) => Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: _buildCartItem(item),
+                          ),
+                        )
+                        .toList(),
 
-                        // Order Summary
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: const Color(0xFFA5D6A7).withOpacity(0.3),
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              _buildSummaryRow('Subtotal', '\$${_subtotal.toStringAsFixed(2)}'),
-                              const SizedBox(height: 12),
-                              _buildSummaryRow('Service fee', '\$${_serviceFee.toStringAsFixed(2)}'),
-                              const Divider(height: 24),
-                              _buildSummaryRow(
-                                'Total',
-                                '\$${_total.toStringAsFixed(2)}',
-                                isTotal: true,
-                              ),
-                            ],
-                          ),
+                    SizedBox(height: height * 0.02),
+
+                    // Order Summary
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFFA5D6A7).withOpacity(0.3),
                         ),
-
-                        SizedBox(height: height * 0.03),
-
-                        // Proceed to Checkout Button
-                        SizedBox(
-                          width: double.infinity,
-                          height: height * 0.065,
-                          child: ElevatedButton(
-                            onPressed: _isProcessingCheckout ? null : () async {
-                              setState(() => _isProcessingCheckout = true);
-                              
-                              try {
-                                // 1. Get User Info
-                                final authService = Provider.of<AuthService>(context, listen: false);
-                                final userEmail = await authService.getStoredUserEmail() ?? 'user@nourish.com';
-                                final userName = await authService.getStoredUserName() ?? 'Nourish User';
-                                
-                                // 2. Get Payment URL from Paymob
-                                final paymobService = PaymobService();
-                                final paymentUrl = await paymobService.getPaymentUrl(
-                                  amountInDollars: _total,
-                                  userEmail: userEmail,
-                                  userName: userName,
-                                  userPhone: '+201000000000',
-                                );
-
-                                if (!mounted) return;
-
-                                // 3. Show Payment Screen
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => PaymobCheckoutScreen(
-                                      totalAmount: _total,
-                                      cartItems: _cartItems,
-                                    ),
-                                  ),
-                                );
-
-                                // 4. Handle Result
-                                if (result == true && mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('✅ Payment successful! Order placed.'),
-                                      backgroundColor: Color(0xFF4CAF50),
-                                    ),
-                                  );
-                                  await _loadCart();
-                                }
-                              } catch (e) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Checkout failed: $e'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
-                              } finally {
-                                if (mounted) {
-                                  setState(() => _isProcessingCheckout = false);
-                                }
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF4CAF50),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: _isProcessingCheckout
-                                ? const SizedBox(
-                                    height: 24,
-                                    width: 24,
-                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                                  )
-                                : const Text(
-                                    'Proceed to Checkout',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
+                      ),
+                      child: Column(
+                        children: [
+                          _buildSummaryRow(
+                            'Subtotal',
+                            '\$${_subtotal.toStringAsFixed(2)}',
                           ),
-                        ),
-
-                        SizedBox(height: height * 0.03),
-                      ],
+                          const SizedBox(height: 12),
+                          _buildSummaryRow(
+                            'Service fee',
+                            '\$${_serviceFee.toStringAsFixed(2)}',
+                          ),
+                          const Divider(height: 24),
+                          _buildSummaryRow(
+                            'Total',
+                            '\$${_total.toStringAsFixed(2)}',
+                            isTotal: true,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+
+                    SizedBox(height: height * 0.03),
+
+                    // Proceed to Checkout Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: height * 0.065,
+                      child: ElevatedButton(
+                        onPressed: _isProcessingCheckout
+                            ? null
+                            : () async {
+                                setState(() => _isProcessingCheckout = true);
+
+                                try {
+                                  // 1. Get User Info
+                                  final authService = Provider.of<AuthService>(
+                                    context,
+                                    listen: false,
+                                  );
+                                  final userEmail =
+                                      await authService.getStoredUserEmail() ??
+                                      'user@nourish.com';
+                                  final userName =
+                                      await authService.getStoredUserName() ??
+                                      'Nourish User';
+
+                                  // 2. Get Payment URL from Paymob
+                                  final paymobService = PaymobService();
+                                  final paymentUrl = await paymobService
+                                      .getPaymentUrl(
+                                        amountInDollars: _total,
+                                        userEmail: userEmail,
+                                        userName: userName,
+                                        userPhone: '+201000000000',
+                                      );
+
+                                  if (!mounted) return;
+
+                                  // 3. Show Payment Screen
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          PaymobCheckoutScreen(
+                                            totalAmount: _total,
+                                            cartItems: _cartItems,
+                                          ),
+                                    ),
+                                  );
+
+                                  // 4. Handle Result
+                                  if (result == true && mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          '✅ Payment successful! Order placed.',
+                                        ),
+                                        backgroundColor: Color(0xFF4CAF50),
+                                      ),
+                                    );
+                                    await _loadCart();
+                                  }
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Checkout failed: $e'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                } finally {
+                                  if (mounted) {
+                                    setState(
+                                      () => _isProcessingCheckout = false,
+                                    );
+                                  }
+                                }
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4CAF50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: _isProcessingCheckout
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'Proceed to Checkout',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
+                    ),
+
+                    SizedBox(height: height * 0.03),
+                  ],
                 ),
+              ),
+            ),
     );
   }
 
@@ -268,10 +293,7 @@ class _CartScreenState extends State<CartScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text(
-            '🛒',
-            style: TextStyle(fontSize: 80),
-          ),
+          const Text('🛒', style: TextStyle(fontSize: 80)),
           const SizedBox(height: 16),
           const Text(
             'Your cart is empty',
@@ -284,10 +306,7 @@ class _CartScreenState extends State<CartScreen> {
           const SizedBox(height: 8),
           const Text(
             'Add some delicious meals to get started!',
-            style: TextStyle(
-              fontSize: 16,
-              color: Color(0xFF2E7D32),
-            ),
+            style: TextStyle(fontSize: 16, color: Color(0xFF2E7D32)),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
@@ -326,9 +345,7 @@ class _CartScreenState extends State<CartScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFA5D6A7).withOpacity(0.3),
-        ),
+        border: Border.all(color: const Color(0xFFA5D6A7).withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -345,14 +362,11 @@ class _CartScreenState extends State<CartScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Center(
-                  child: Text(
-                    '🥐',
-                    style: TextStyle(fontSize: 30),
-                  ),
+                  child: Text('🥐', style: TextStyle(fontSize: 30)),
                 ),
               ),
               const SizedBox(width: 12),
-              
+
               // Title and details
               Expanded(
                 child: Column(
@@ -378,7 +392,7 @@ class _CartScreenState extends State<CartScreen> {
                   ],
                 ),
               ),
-              
+
               // Delete button
               IconButton(
                 icon: const Icon(Icons.delete_outline, color: Colors.red),
@@ -388,9 +402,9 @@ class _CartScreenState extends State<CartScreen> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Quantity controls
           Row(
             children: [
@@ -446,9 +460,9 @@ class _CartScreenState extends State<CartScreen> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           // Subtotal for this item
           Align(
             alignment: Alignment.centerRight,

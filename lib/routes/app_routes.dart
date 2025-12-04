@@ -31,19 +31,21 @@ class AppRoutes {
   static const String camera = '/camera';
   static const String foodDetectionResults = '/food_detection_results';
   static const String paymobSuccess = '/paymob-success';
-  
+
   static Map<String, WidgetBuilder> routes = {
     // Public routes (no auth required)
     welcome: (context) => const WelcomeScreen(),
     signup: (context) => const CreateAccountScreen(),
     signin: (context) => const SignInScreen(),
-    
+
     // Protected routes (auth required)
     foodDetails: (context) => const AuthGuard(child: FoodDetailsScreen()),
     cart: (context) => const AuthGuard(child: CartScreen()),
     home: (context) => const AuthGuard(child: HomeScreen()),
-    browseRestaurants: (context) => const AuthGuard(child: BrowseRestaurantsScreen()),
-    restaurantDetail: (context) => const AuthGuard(child: RestaurantDetailScreen()),
+    browseRestaurants: (context) =>
+        const AuthGuard(child: BrowseRestaurantsScreen()),
+    restaurantDetail: (context) =>
+        const AuthGuard(child: RestaurantDetailScreen()),
     charity: (context) => const AuthGuard(child: CharityScreen()),
     profile: (context) => const AuthGuard(child: ProfileScreen()),
     subscription: (context) => const AuthGuard(child: SubscriptionScreen()),

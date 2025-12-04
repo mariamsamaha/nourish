@@ -18,7 +18,7 @@ List<CameraDescription> cameras = [];
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Firebase
   // Note: This requires running `flutterfire configure` first to generate firebase_options.dart
   try {
@@ -48,15 +48,9 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        Provider<FirestoreService>(
-          create: (_) => FirestoreService(),
-        ),
-        Provider<AuthService>(
-          create: (_) => AuthService(),
-        ),
-        Provider<DatabaseService>(
-          create: (_) => DatabaseService(),
-        ),
+        Provider<FirestoreService>(create: (_) => FirestoreService()),
+        Provider<AuthService>(create: (_) => AuthService()),
+        Provider<DatabaseService>(create: (_) => DatabaseService()),
       ],
       child: MyApp(cameras: cameras),
     ),
@@ -104,13 +98,16 @@ class _MyAppState extends State<MyApp> {
     }
 
     // Listen for new links
-    _linkSubscription = _appLinks.uriLinkStream.listen((Uri? uri) {
-      if (uri != null) {
-        _handleDeepLink(uri);
-      }
-    }, onError: (err) {
-      print('Error listening to links: $err');
-    });
+    _linkSubscription = _appLinks.uriLinkStream.listen(
+      (Uri? uri) {
+        if (uri != null) {
+          _handleDeepLink(uri);
+        }
+      },
+      onError: (err) {
+        print('Error listening to links: $err');
+      },
+    );
   }
 
   void _handleDeepLink(Uri uri) {
@@ -130,11 +127,8 @@ class _MyAppState extends State<MyApp> {
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'Nourish',
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-        fontFamily: 'Arial',
-      ),
-      initialRoute: AppRoutes.welcome, 
+      theme: ThemeData(primarySwatch: Colors.green, fontFamily: 'Arial'),
+      initialRoute: AppRoutes.welcome,
       routes: AppRoutes.routes,
       onGenerateRoute: (settings) {
         // Handle camera route with cameras argument
@@ -148,4 +142,3 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
-

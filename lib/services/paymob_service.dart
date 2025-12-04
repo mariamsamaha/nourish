@@ -3,10 +3,11 @@ import 'package:http/http.dart' as http;
 
 class PaymobService {
   // Paymob Credentials
-  static const String _apiKey = 'ZXlKaGJHY2lPaUpJVXpVeE1pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SmpiR0Z6Y3lJNklrMWxjbU5vWVc1MElpd2ljSEp2Wm1sc1pWOXdheUk2T1RrME5UUXlMQ0p1WVcxbElqb2lNVGMwTkRnek1qZ3pPQzQxTlRBeU1qY2lmUS5sZ2RXVVlFQXduNTBuaVRwQXdOZGN1Y3dQY0QtOXozQk5IWGw1Rm5jMEVSamRDcFlmSWNlb2FsdzdzTEJ1V3g4Y3I4THd6OGVPV2lMM1gxMzFSeGFpdw==';
+  static const String _apiKey =
+      'ZXlKaGJHY2lPaUpJVXpVeE1pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SmpiR0Z6Y3lJNklrMWxjbU5vWVc1MElpd2ljSEp2Wm1sc1pWOXdheUk2T1RrME5UUXlMQ0p1WVcxbElqb2lNVGMwTkRnek1qZ3pPQzQxTlRBeU1qY2lmUS5sZ2RXVVlFQXduNTBuaVRwQXdOZGN1Y3dQY0QtOXozQk5IWGw1Rm5jMEVSamRDcFlmSWNlb2FsdzdzTEJ1V3g4Y3I4THd6OGVPV2lMM1gxMzFSeGFpdw==';
   static const int _integrationId = 4829834;
   static const int _iFrameId = 867265;
-  
+
   static const String _baseUrl = 'https://accept.paymob.com/api';
 
   /// Step 1: Get authentication token
@@ -133,7 +134,7 @@ class PaymobService {
   }) async {
     try {
       print('💰 Processing payment: \$${amountInDollars.toStringAsFixed(2)}');
-      
+
       // Convert USD to EGP cents (1 USD = 31 EGP approximately, * 100 for cents)
       final amountCents = amountInDollars * 31 * 100;
       print('💵 Amount in EGP cents: $amountCents');
@@ -156,7 +157,8 @@ class PaymobService {
       );
 
       // Return payment URL for iFrame
-      final paymentUrl = 'https://accept.paymob.com/api/acceptance/iframes/$_iFrameId?payment_token=$paymentKey';
+      final paymentUrl =
+          'https://accept.paymob.com/api/acceptance/iframes/$_iFrameId?payment_token=$paymentKey';
       print('🌐 Payment URL generated');
       return paymentUrl;
     } catch (e) {

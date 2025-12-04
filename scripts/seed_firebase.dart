@@ -7,9 +7,7 @@ import 'package:proj/firebase_options.dart';
 
 Future<void> main() async {
   // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   final firestore = FirebaseFirestore.instance;
 
@@ -22,7 +20,8 @@ Future<void> main() async {
       name: 'Artisan Bakery',
       rating: 4.8,
       reviews: 234,
-      imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800',
+      imageUrl:
+          'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800',
       address: '123 Baker St, San Francisco, CA',
       tags: ['Bakery', 'Pastries', 'Bread'],
       latitude: 37.7749,
@@ -33,7 +32,8 @@ Future<void> main() async {
       name: 'Green Leaf Salad',
       rating: 4.6,
       reviews: 156,
-      imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800',
+      imageUrl:
+          'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800',
       address: '456 Green Way, San Francisco, CA',
       tags: ['Healthy', 'Salad', 'Vegan'],
       latitude: 37.7849,
@@ -44,7 +44,8 @@ Future<void> main() async {
       name: 'Sushi Master',
       rating: 4.9,
       reviews: 512,
-      imageUrl: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800',
+      imageUrl:
+          'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800',
       address: '789 Ocean Dr, San Francisco, CA',
       tags: ['Japanese', 'Sushi', 'Seafood'],
       latitude: 37.7649,
@@ -67,7 +68,8 @@ Future<void> main() async {
       originalPrice: 15.00,
       quantity: 5,
       pickupTime: '7:00 PM - 9:00 PM',
-      imageUrl: 'https://images.unsplash.com/photo-1608198093002-ad4e005484ec?w=800',
+      imageUrl:
+          'https://images.unsplash.com/photo-1608198093002-ad4e005484ec?w=800',
       allergens: ['Gluten', 'Eggs', 'Dairy'],
     ),
     FoodItem(
@@ -78,7 +80,8 @@ Future<void> main() async {
       originalPrice: 14.00,
       quantity: 3,
       pickupTime: '8:00 PM - 9:00 PM',
-      imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800',
+      imageUrl:
+          'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800',
       allergens: ['Nuts'],
     ),
     FoodItem(
@@ -89,7 +92,8 @@ Future<void> main() async {
       originalPrice: 25.00,
       quantity: 2,
       pickupTime: '9:00 PM - 10:00 PM',
-      imageUrl: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800',
+      imageUrl:
+          'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800',
       allergens: ['Fish', 'Soy'],
     ),
   ];
@@ -104,8 +108,10 @@ Future<void> main() async {
     Charity(
       id: 'c1',
       name: 'SF Food Bank',
-      description: 'Fighting hunger in San Francisco by providing meals to those in need.',
-      imageUrl: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800',
+      description:
+          'Fighting hunger in San Francisco by providing meals to those in need.',
+      imageUrl:
+          'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800',
       impactGoal: 10000,
       currentImpact: 5432,
     ),
@@ -113,7 +119,8 @@ Future<void> main() async {
       id: 'c2',
       name: 'Homeless Shelter',
       description: 'Providing shelter and hot meals to homeless individuals.',
-      imageUrl: 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=800',
+      imageUrl:
+          'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=800',
       impactGoal: 5000,
       currentImpact: 2100,
     ),

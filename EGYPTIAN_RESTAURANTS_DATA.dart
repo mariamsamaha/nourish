@@ -11,10 +11,11 @@ final List<Restaurant> egyptianRestaurants = [
     name: 'El Shabrawy Port Said',
     rating: 4.7,
     reviews: 342,
-    imageUrl: 'https://images.unsplash.com/photo-1517244683847-7456b63c5969?w=800',
+    imageUrl:
+        'https://images.unsplash.com/photo-1517244683847-7456b63c5969?w=800',
     address: 'Gomhoureya St, Port Said, Egypt',
     tags: ['Egyptian', 'Grilled', 'Traditional'],
-    latitude: 31.2653,  // Port Said city center
+    latitude: 31.2653, // Port Said city center
     longitude: 32.3019,
     hasPickup: true,
     hasDelivery: true,
@@ -25,10 +26,11 @@ final List<Restaurant> egyptianRestaurants = [
     name: 'Fish Market Port Fouad',
     rating: 4.8,
     reviews: 289,
-    imageUrl: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=800',
+    imageUrl:
+        'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=800',
     address: 'Port Fouad, Port Said, Egypt',
     tags: ['Seafood', 'Fish', 'Mediterranean'],
-    latitude: 31.2447,  // Port Fouad
+    latitude: 31.2447, // Port Fouad
     longitude: 32.3186,
     hasPickup: true,
     hasDelivery: false,
@@ -43,7 +45,7 @@ final List<Restaurant> egyptianRestaurants = [
     imageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800',
     address: 'Al Haram St, Giza, Egypt',
     tags: ['Egyptian', 'Grilled', 'Traditional'],
-    latitude: 29.9792,  // Near Pyramids, Al Haram Street
+    latitude: 29.9792, // Near Pyramids, Al Haram Street
     longitude: 31.1342,
     hasPickup: true,
     hasDelivery: true,
@@ -54,10 +56,11 @@ final List<Restaurant> egyptianRestaurants = [
     name: 'Sequoia Cairo',
     rating: 4.6,
     reviews: 678,
-    imageUrl: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800',
+    imageUrl:
+        'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800',
     address: 'Nile Corniche, Zamalek, Cairo, Egypt',
     tags: ['Mediterranean', 'Upscale', 'View'],
-    latitude: 30.0626,  // Zamalek, Nile side
+    latitude: 30.0626, // Zamalek, Nile side
     longitude: 31.2204,
     hasPickup: false,
     hasDelivery: false,
@@ -69,10 +72,11 @@ final List<Restaurant> egyptianRestaurants = [
     name: 'Makani Nasr City',
     rating: 4.5,
     reviews: 423,
-    imageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800',
+    imageUrl:
+        'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800',
     address: 'Abbas El Akkad St, Nasr City, Cairo, Egypt',
     tags: ['Cafe', 'Pizza', 'Burgers'],
-    latitude: 30.0566,  // Nasr City
+    latitude: 30.0566, // Nasr City
     longitude: 31.3457,
     hasPickup: true,
     hasDelivery: true,
@@ -84,10 +88,11 @@ final List<Restaurant> egyptianRestaurants = [
     name: 'Zooba Heliopolis',
     rating: 4.7,
     reviews: 567,
-    imageUrl: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800',
+    imageUrl:
+        'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800',
     address: 'Othman Towers, Heliopolis, Cairo, Egypt',
     tags: ['Egyptian', 'Street Food', 'Modern'],
-    latitude: 30.0844,  // Heliopolis
+    latitude: 30.0844, // Heliopolis
     longitude: 31.3098,
     hasPickup: true,
     hasDelivery: true,
@@ -102,7 +107,7 @@ final List<Restaurant> egyptianRestaurants = [
     imageUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800',
     address: 'Road 9, Maadi, Cairo, Egypt',
     tags: ['American', 'Burgers', 'Breakfast'],
-    latitude: 29.9606,  // Maadi
+    latitude: 29.9606, // Maadi
     longitude: 31.2497,
     hasPickup: true,
     hasDelivery: true,
@@ -117,7 +122,7 @@ final List<Restaurant> egyptianRestaurants = [
     imageUrl: 'https://images.unsplash.com/photo-1559496417-e7f25cb247f6?w=800',
     address: 'Corniche, Bahary, Alexandria, Egypt',
     tags: ['Seafood', 'Fish', 'Mediterranean'],
-    latitude: 31.2001,  // Alexandria Corniche
+    latitude: 31.2001, // Alexandria Corniche
     longitude: 29.9187,
     hasPickup: true,
     hasDelivery: false,
@@ -129,10 +134,11 @@ final List<Restaurant> egyptianRestaurants = [
     name: 'Mori Sushi Mall of Arabia',
     rating: 4.6,
     reviews: 334,
-    imageUrl: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800',
+    imageUrl:
+        'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800',
     address: 'Mall of Arabia, 6th of October, Giza, Egypt',
     tags: ['Japanese', 'Sushi', 'Asian'],
-    latitude: 29.9778,  // Mall of Arabia area
+    latitude: 29.9778, // Mall of Arabia area
     longitude: 30.9293,
     hasPickup: true,
     hasDelivery: true,
@@ -144,10 +150,11 @@ final List<Restaurant> egyptianRestaurants = [
     name: 'Felfela Downtown',
     rating: 4.4,
     reviews: 1203,
-    imageUrl: 'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=800',
+    imageUrl:
+        'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=800',
     address: 'Hoda Sharawy St, Downtown Cairo, Egypt',
     tags: ['Egyptian', 'Traditional', 'Falafel'],
-    latitude: 30.0444,  // Downtown Cairo
+    latitude: 30.0444, // Downtown Cairo
     longitude: 31.2357,
     hasPickup: true,
     hasDelivery: true,
@@ -155,7 +162,7 @@ final List<Restaurant> egyptianRestaurants = [
 ];
 
 // HOW TO UPDATE YOUR FIRESTORE:
-// 
+//
 // Method 1: Update via Firebase Console
 // ----------------------------------------
 // 1. Go to: https://console.firebase.google.com/
@@ -205,7 +212,7 @@ updateRestaurantsToEgypt();
 
 // COORDINATE ACCURACY EXPLAINED:
 // --------------------------------
-// 
+//
 // ✅ These coordinates are ACCURATE - they point to real locations in Egypt:
 //
 // Port Said:   31.2653°N, 32.3019°E  (City Center)
@@ -233,4 +240,3 @@ updateRestaurantsToEgypt();
 // - Uses Haversine formula → accurate within 0.5%
 // - Example: If distance = 10 km, error is < 50 meters
 // - Perfect for "as the crow flies" distance!
-

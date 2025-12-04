@@ -44,7 +44,9 @@ class _CameraScreenState extends State<CameraScreen> {
       }
 
       // Initialize camera (use back camera if available, otherwise front camera)
-      final camera = widget.cameras.length > 1 ? widget.cameras[1] : widget.cameras[0];
+      final camera = widget.cameras.length > 1
+          ? widget.cameras[1]
+          : widget.cameras[0];
       _controller = CameraController(
         camera,
         ResolutionPreset.high,
@@ -81,7 +83,7 @@ class _CameraScreenState extends State<CameraScreen> {
       });
 
       final XFile picture = await _controller.takePicture();
-      
+
       setState(() {
         _capturedImage = picture;
       });
@@ -129,15 +131,10 @@ class _CameraScreenState extends State<CameraScreen> {
             icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Navigator.pop(context),
           ),
-          title: const Text(
-            'Camera',
-            style: TextStyle(color: Colors.white),
-          ),
+          title: const Text('Camera', style: TextStyle(color: Colors.white)),
         ),
         body: const Center(
-          child: CircularProgressIndicator(
-            color: Colors.white,
-          ),
+          child: CircularProgressIndicator(color: Colors.white),
         ),
       );
     }
@@ -158,9 +155,7 @@ class _CameraScreenState extends State<CameraScreen> {
       ),
       body: Stack(
         children: [
-          Positioned.fill(
-            child: CameraPreview(_controller),
-          ),
+          Positioned.fill(child: CameraPreview(_controller)),
           Positioned(
             bottom: 40,
             left: 0,
@@ -171,9 +166,7 @@ class _CameraScreenState extends State<CameraScreen> {
                 backgroundColor: Colors.white,
                 foregroundColor: const Color(0xFF1B5E20),
                 child: _isProcessing
-                    ? const CircularProgressIndicator(
-                        color: Color(0xFF1B5E20),
-                      )
+                    ? const CircularProgressIndicator(color: Color(0xFF1B5E20))
                     : const Icon(Icons.camera_alt, size: 32),
               ),
             ),
@@ -183,4 +176,3 @@ class _CameraScreenState extends State<CameraScreen> {
     );
   }
 }
-

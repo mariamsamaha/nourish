@@ -44,7 +44,10 @@ class CustomBottomNavBar extends StatelessWidget {
       onTap: () => onTap(index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: isSelected ? 16 : 0, vertical: 8),
+        padding: EdgeInsets.symmetric(
+          horizontal: isSelected ? 16 : 0,
+          vertical: 8,
+        ),
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFF00C853) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
@@ -71,10 +74,7 @@ class CustomBottomNavBar extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 label,
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 10,
-                ),
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 10),
               ),
             ],
           ],

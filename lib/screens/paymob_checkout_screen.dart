@@ -36,11 +36,12 @@ class _PaymobCheckoutScreenState extends State<PaymobCheckoutScreen> {
   Future<void> _initializePayment() async {
     try {
       print('🚀 Initializing payment...');
-      
+
       final authService = Provider.of<AuthService>(context, listen: false);
-      final userEmail = await authService.getStoredUserEmail() ?? 'user@nourish.com';
+      final userEmail =
+          await authService.getStoredUserEmail() ?? 'user@nourish.com';
       final userName = await authService.getStoredUserName() ?? 'Nourish User';
-      
+
       // Determine redirection URL based on platform
       String? redirectionUrl;
       if (kIsWeb) {
@@ -70,7 +71,6 @@ class _PaymobCheckoutScreenState extends State<PaymobCheckoutScreen> {
         _paymentUrl = paymentUrl;
         _isLoadingUrl = false;
       });
-
     } catch (e) {
       print('❌ Payment init error: $e');
       setState(() {
@@ -92,7 +92,7 @@ class _PaymobCheckoutScreenState extends State<PaymobCheckoutScreen> {
 
   Future<void> _handlePaymentSuccess() async {
     print('🎉 Processing successful payment...');
-    
+
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       final dbService = Provider.of<DatabaseService>(context, listen: false);
@@ -171,47 +171,47 @@ class _PaymobCheckoutScreenState extends State<PaymobCheckoutScreen> {
               ),
             )
           : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error, color: Colors.red, size: 64),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Payment Error',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _error!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.grey),
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF4CAF50),
-                          ),
-                          child: const Text(
-                            'Go Back',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ],
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error, color: Colors.red, size: 64),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Payment Error',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
+                      ),
                     ),
-                  ),
-                )
-              : PaymobWebView(
-                  url: _paymentUrl!,
-                  onPaymentResult: _handlePaymentResult,
+                    const SizedBox(height: 8),
+                    Text(
+                      _error!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4CAF50),
+                      ),
+                      child: const Text(
+                        'Go Back',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+            )
+          : PaymobWebView(
+              url: _paymentUrl!,
+              onPaymentResult: _handlePaymentResult,
+            ),
       floatingActionButton: kIsWeb
           ? FloatingActionButton.extended(
               onPressed: _handlePaymentSuccess,

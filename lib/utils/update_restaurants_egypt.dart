@@ -2,10 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 /// QUICK FIX: Update all restaurants to Egyptian locations
-/// 
+///
 /// HOW TO USE:
 /// 1. Add this button to your home screen temporarily:
-///    
+///
 ///    FloatingActionButton(
 ///      onPressed: () => updateRestaurantsToEgypt(context),
 ///      child: Text('Fix Locations'),
@@ -178,4 +178,3 @@ Future<void> updateRestaurantsToEgypt(BuildContext context) async {
     debugPrint('❌ Error updating restaurants: $e');
   }
 }
-

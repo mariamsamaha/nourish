@@ -42,7 +42,11 @@ class WelcomeScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: Icon(Icons.eco, color: Colors.green, size: height * 0.07),
+                  child: Icon(
+                    Icons.eco,
+                    color: Colors.green,
+                    size: height * 0.07,
+                  ),
                 ),
                 SizedBox(height: height * 0.02),
 
@@ -87,14 +91,23 @@ class WelcomeScreen extends StatelessWidget {
                       Stack(
                         clipBehavior: Clip.none,
                         children: const [
-                          CircleAvatar(radius: 12, backgroundColor: Colors.pink),
+                          CircleAvatar(
+                            radius: 12,
+                            backgroundColor: Colors.pink,
+                          ),
                           Positioned(
                             left: 15,
-                            child: CircleAvatar(radius: 12, backgroundColor: Colors.blue),
+                            child: CircleAvatar(
+                              radius: 12,
+                              backgroundColor: Colors.blue,
+                            ),
                           ),
                           Positioned(
                             left: 30,
-                            child: CircleAvatar(radius: 12, backgroundColor: Colors.purple),
+                            child: CircleAvatar(
+                              radius: 12,
+                              backgroundColor: Colors.purple,
+                            ),
                           ),
                         ],
                       ),
@@ -126,7 +139,10 @@ class WelcomeScreen extends StatelessWidget {
                     ),
                     child: const Text(
                       "Get Started →",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),

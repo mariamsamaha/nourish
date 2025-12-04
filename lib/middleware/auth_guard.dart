@@ -14,16 +14,14 @@ class AuthGuard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context, listen: false);
-    
+
     return StreamBuilder<User?>(
       stream: authService.authStateChanges,
       builder: (context, snapshot) {
         // Show loading while checking auth status
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
+            body: Center(child: CircularProgressIndicator()),
           );
         }
 
@@ -34,19 +32,16 @@ class AuthGuard extends StatelessWidget {
           // Not authenticated - redirect to welcome screen
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (Navigator.canPop(context)) {
-              Navigator.of(context).pushNamedAndRemoveUntil(
-                AppRoutes.welcome,
-                (route) => false,
-              );
+              Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil(AppRoutes.welcome, (route) => false);
             } else {
               Navigator.of(context).pushReplacementNamed(AppRoutes.welcome);
             }
           });
-          
+
           return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
+            body: Center(child: CircularProgressIndicator()),
           );
         }
 

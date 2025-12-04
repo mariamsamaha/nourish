@@ -18,12 +18,12 @@ class AuthStorageService {
     String? authToken,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     await prefs.setString(_keyUserId, userId);
     await prefs.setString(_keyUserEmail, email);
     if (name != null) await prefs.setString(_keyUserName, name);
     await prefs.setBool(_keyIsLoggedIn, true);
-    
+
     if (authToken != null) {
       await prefs.setString(_keyAuthToken, authToken);
     }
@@ -62,7 +62,7 @@ class AuthStorageService {
   /// Clear all stored authentication data (called on logout)
   Future<void> clearUserData() async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     await prefs.remove(_keyUserId);
     await prefs.remove(_keyUserEmail);
     await prefs.remove(_keyUserName);

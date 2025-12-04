@@ -30,9 +30,11 @@ class _CharityScreenState extends State<CharityScreen> {
   Future<void> _loadUserData() async {
     final authService = Provider.of<AuthService>(context, listen: false);
     _userId = await authService.getStoredUserId();
-    
+
     if (_userId != null) {
-      final supportedCharities = await _dbService.getSupportedCharities(_userId!);
+      final supportedCharities = await _dbService.getSupportedCharities(
+        _userId!,
+      );
       setState(() {
         _supportedCharityIds = supportedCharities.toSet();
         _isLoading = false;
@@ -70,7 +72,7 @@ class _CharityScreenState extends State<CharityScreen> {
 
   void _onNavTap(int index) {
     if (index == _currentIndex) return; // Already on this screen
-    
+
     setState(() {
       _currentIndex = index;
     });
@@ -92,15 +94,12 @@ class _CharityScreenState extends State<CharityScreen> {
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
-        
             SliverToBoxAdapter(
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  border: const Border(
-                    bottom: BorderSide(color: Colors.grey),
-                  ),
+                  border: const Border(bottom: BorderSide(color: Colors.grey)),
                 ),
                 child: Row(
                   children: [
@@ -125,10 +124,7 @@ class _CharityScreenState extends State<CharityScreen> {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [
-                      Colors.orange.shade500,
-                      Colors.orange.shade600,
-                    ],
+                    colors: [Colors.orange.shade500, Colors.orange.shade600],
                   ),
                 ),
                 child: Column(
@@ -222,7 +218,8 @@ class _CharityScreenState extends State<CharityScreen> {
                   );
                 }
 
-                if (snapshot.connectionState == ConnectionState.waiting || _isLoading) {
+                if (snapshot.connectionState == ConnectionState.waiting ||
+                    _isLoading) {
                   return const SliverToBoxAdapter(
                     child: Center(child: CircularProgressIndicator()),
                   );
@@ -242,35 +239,37 @@ class _CharityScreenState extends State<CharityScreen> {
                 }
 
                 return SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final charity = charities[index];
-                      final bool isSupported = _supportedCharityIds.contains(charity.id);
-                      
-                      return Column(
-                        children: [
-                          CharityCard(
-                            charityId: charity.id,
-                            name: charity.name,
-                            location: 'Location', // TODO: Add location to model
-                            tag: 'Charity', // TODO: Add tag to model
-                            description: charity.description,
-                            meals: charity.currentImpact.toInt().toString(),
-                            highlight: isSupported,
-                            highlightedColor: Colors.orange.shade600,
-                            buttonLabel: isSupported ? 'Currently Supporting' : 'Select & Support',
-                            onToggleSupport: () => _toggleCharitySupport(charity.id),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                      );
-                    },
-                    childCount: charities.length,
-                  ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final charity = charities[index];
+                    final bool isSupported = _supportedCharityIds.contains(
+                      charity.id,
+                    );
+
+                    return Column(
+                      children: [
+                        CharityCard(
+                          charityId: charity.id,
+                          name: charity.name,
+                          location: 'Location', // TODO: Add location to model
+                          tag: 'Charity', // TODO: Add tag to model
+                          description: charity.description,
+                          meals: charity.currentImpact.toInt().toString(),
+                          highlight: isSupported,
+                          highlightedColor: Colors.orange.shade600,
+                          buttonLabel: isSupported
+                              ? 'Currently Supporting'
+                              : 'Select & Support',
+                          onToggleSupport: () =>
+                              _toggleCharitySupport(charity.id),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    );
+                  }, childCount: charities.length),
                 );
               },
             ),
-            
+
             const SliverToBoxAdapter(child: SizedBox(height: 48)),
           ],
         ),
@@ -372,13 +371,18 @@ class CharityCard extends StatelessWidget {
 
                       Row(
                         children: [
-                          Icon(Icons.location_on,
-                              size: 12, color: Colors.grey[600]),
+                          Icon(
+                            Icons.location_on,
+                            size: 12,
+                            color: Colors.grey[600],
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             location,
                             style: TextStyle(
-                                color: Colors.grey[600], fontSize: 12),
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                            ),
                           ),
                         ],
                       ),

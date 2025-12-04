@@ -5,7 +5,11 @@ class PaymobWebView extends StatefulWidget {
   final String url;
   final Function(bool) onPaymentResult;
 
-  const PaymobWebView({super.key, required this.url, required this.onPaymentResult});
+  const PaymobWebView({
+    super.key,
+    required this.url,
+    required this.onPaymentResult,
+  });
 
   @override
   State<PaymobWebView> createState() => _PaymobWebViewState();
@@ -22,7 +26,7 @@ class _PaymobWebViewState extends State<PaymobWebView> {
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageFinished: (String url) {
-             _checkPaymentStatus(url);
+            _checkPaymentStatus(url);
           },
           onNavigationRequest: (NavigationRequest request) {
             _checkPaymentStatus(request.url);
@@ -34,9 +38,11 @@ class _PaymobWebViewState extends State<PaymobWebView> {
   }
 
   void _checkPaymentStatus(String url) {
-    if (url.contains('success=true') || url.contains('txn_response_code=APPROVED')) {
+    if (url.contains('success=true') ||
+        url.contains('txn_response_code=APPROVED')) {
       widget.onPaymentResult(true);
-    } else if (url.contains('success=false') || url.contains('txn_response_code=DECLINED')) {
+    } else if (url.contains('success=false') ||
+        url.contains('txn_response_code=DECLINED')) {
       widget.onPaymentResult(false);
     }
   }

@@ -85,5 +85,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'mobprojnourish.firebasestorage.app',
     measurementId: 'G-2TGEYQ2CCH',
   );
-
 }

@@ -31,32 +31,32 @@ class SubscriptionScreen extends StatelessWidget {
             children: [
               // Premium Benefits Header (moved to top)
               _buildMonthlyPlusHeader(),
-              
+
               const SizedBox(height: 24),
-              
+
               // Weekly Starter Card
               _buildWeeklyStarterCard(context),
-              
+
               const SizedBox(height: 24),
-              
+
               // Monthly Plus Card
               _buildMonthlyPlusCard(context),
-              
+
               const SizedBox(height: 24),
-              
+
               // Annual Pro Card
               _buildAnnualProCard(context),
-              
+
               const SizedBox(height: 32),
-              
+
               // How it works section (moved after Annual Pro)
               _buildHowItWorksSection(),
-              
+
               const SizedBox(height: 24),
-              
+
               // Footer guarantees
               _buildFooter(),
-              
+
               const SizedBox(height: 20),
             ],
           ),
@@ -117,15 +117,12 @@ class SubscriptionScreen extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: Text(
               'per week',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Per Meal Highlight
           Container(
             width: double.infinity,
@@ -147,10 +144,7 @@ class SubscriptionScreen extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   'per meal',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade700,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -164,17 +158,17 @@ class SubscriptionScreen extends StatelessWidget {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Features List
           _buildFeatureItem('1 meal per day'),
           _buildFeatureItem('Choose from 50+ restaurants'),
           _buildFeatureItem('Save up to 70% on meals'),
           _buildFeatureItem('Flexible pick-up times'),
-          
+
           const SizedBox(height: 24),
-          
+
           // CTA Button
           SizedBox(
             width: double.infinity,
@@ -258,10 +252,7 @@ class SubscriptionScreen extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                fontSize: 15,
-                color: Colors.black87,
-              ),
+              style: const TextStyle(fontSize: 15, color: Colors.black87),
             ),
           ),
         ],
@@ -273,11 +264,7 @@ class SubscriptionScreen extends StatelessWidget {
   Widget _buildMonthlyPlusHeader() {
     return Column(
       children: [
-        Icon(
-          Icons.auto_awesome,
-          color: Colors.pink.shade400,
-          size: 40,
-        ),
+        Icon(Icons.auto_awesome, color: Colors.pink.shade400, size: 40),
         const SizedBox(height: 8),
         const Text(
           'Unlock Premium Benefits',
@@ -290,10 +277,7 @@ class SubscriptionScreen extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           'Save more, eat better, make bigger impact',
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey.shade600,
-          ),
+          style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
         ),
       ],
     );
@@ -306,17 +290,11 @@ class SubscriptionScreen extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         gradient: LinearGradient(
-          colors: [
-            Colors.purple.shade50,
-            Colors.pink.shade50,
-          ],
+          colors: [Colors.purple.shade50, Colors.pink.shade50],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(
-          width: 2,
-          color: Colors.transparent,
-        ),
+        border: Border.all(width: 2, color: Colors.transparent),
         boxShadow: [
           BoxShadow(
             color: Colors.purple.shade200.withOpacity(0.3),
@@ -328,18 +306,22 @@ class SubscriptionScreen extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Main content 
+          // Main content
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 32, 20, 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [ 
+              children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.auto_awesome, color: Colors.purple.shade400, size: 20),
+                        Icon(
+                          Icons.auto_awesome,
+                          color: Colors.purple.shade400,
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
                         const Text(
                           'Monthly Plus',
@@ -366,24 +348,18 @@ class SubscriptionScreen extends StatelessWidget {
                   alignment: Alignment.centerRight,
                   child: Text(
                     'per month',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                   ),
                 ),
-                
+
                 const SizedBox(height: 20),
-                 
+
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [
-                        Colors.purple.shade100,
-                        Colors.pink.shade100,
-                      ],
+                      colors: [Colors.purple.shade100, Colors.pink.shade100],
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -417,27 +393,24 @@ class SubscriptionScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 _buildFeatureItem('1 meal every day'),
                 _buildFeatureItem('Choose from 50+ restaurants'),
                 _buildFeatureItem('Save up to 70% on meals'),
                 _buildFeatureItem('Priority access to popular items'),
                 _buildFeatureItem('Free delivery over \$20'),
                 _buildFeatureItem('Impact tracking & rewards'),
-                
+
                 const SizedBox(height: 24),
-                
+
                 Container(
                   width: double.infinity,
                   height: 50,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [
-                        Colors.purple.shade600,
-                        Colors.pink.shade500,
-                      ],
+                      colors: [Colors.purple.shade600, Colors.pink.shade500],
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -463,7 +436,7 @@ class SubscriptionScreen extends StatelessWidget {
               ],
             ),
           ),
-           
+
           Positioned(
             top: -8,
             right: 16,
@@ -483,10 +456,7 @@ class SubscriptionScreen extends StatelessWidget {
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    '🔥',
-                    style: TextStyle(fontSize: 12),
-                  ),
+                  Text('🔥', style: TextStyle(fontSize: 12)),
                   SizedBox(width: 4),
                   Text(
                     'Most Popular',
@@ -512,17 +482,11 @@ class SubscriptionScreen extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         gradient: LinearGradient(
-          colors: [
-            Colors.orange.shade50,
-            Colors.amber.shade50,
-          ],
+          colors: [Colors.orange.shade50, Colors.amber.shade50],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(
-          width: 2,
-          color: Colors.transparent,
-        ),
+        border: Border.all(width: 2, color: Colors.transparent),
         boxShadow: [
           BoxShadow(
             color: Colors.orange.shade200.withOpacity(0.3),
@@ -534,7 +498,7 @@ class SubscriptionScreen extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Main content 
+          // Main content
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 32, 20, 20),
             child: Column(
@@ -545,10 +509,7 @@ class SubscriptionScreen extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Text(
-                          '👑',
-                          style: TextStyle(fontSize: 20),
-                        ),
+                        const Text('👑', style: TextStyle(fontSize: 20)),
                         const SizedBox(width: 8),
                         const Text(
                           'Annual Pro',
@@ -590,18 +551,15 @@ class SubscriptionScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 20),
-                 
+
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [
-                        Colors.orange.shade100,
-                        Colors.amber.shade100,
-                      ],
+                      colors: [Colors.orange.shade100, Colors.amber.shade100],
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -635,9 +593,9 @@ class SubscriptionScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 _buildFeatureItem('1 meal every day'),
                 _buildFeatureItem('All restaurants unlocked'),
                 _buildFeatureItem('Save up to 70% on meals'),
@@ -645,18 +603,15 @@ class SubscriptionScreen extends StatelessWidget {
                 _buildFeatureItem('Free delivery on all orders'),
                 _buildFeatureItem('Double impact points'),
                 _buildFeatureItem('2 guest passes per month'),
-                
+
                 const SizedBox(height: 24),
-                
+
                 Container(
                   width: double.infinity,
                   height: 50,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [
-                        Colors.orange.shade600,
-                        Colors.amber.shade500,
-                      ],
+                      colors: [Colors.orange.shade600, Colors.amber.shade500],
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -682,7 +637,7 @@ class SubscriptionScreen extends StatelessWidget {
               ],
             ),
           ),
-           
+
           Positioned(
             top: -8,
             right: 16,
@@ -702,10 +657,7 @@ class SubscriptionScreen extends StatelessWidget {
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    '👑',
-                    style: TextStyle(fontSize: 12),
-                  ),
+                  Text('👑', style: TextStyle(fontSize: 12)),
                   SizedBox(width: 4),
                   Text(
                     'Best Value',
@@ -729,31 +681,21 @@ class SubscriptionScreen extends StatelessWidget {
     return Text(
       'Cancel anytime • No commitment • Money-back guarantee',
       textAlign: TextAlign.center,
-      style: TextStyle(
-        fontSize: 13,
-        color: Colors.grey.shade600,
-      ),
+      style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
     );
   }
- 
+
   Widget _buildFeatureItem(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          Icon(
-            Icons.check_circle,
-            color: Colors.green.shade600,
-            size: 20,
-          ),
+          Icon(Icons.check_circle, color: Colors.green.shade600, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                fontSize: 15,
-                color: Colors.black87,
-              ),
+              style: const TextStyle(fontSize: 15, color: Colors.black87),
             ),
           ),
         ],

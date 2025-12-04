@@ -15,14 +15,14 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
 
   Future<void> _addToCart(BuildContext context, Map? args) async {
     setState(() => _isAddingToCart = true);
-    
+
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       final dbService = Provider.of<DatabaseService>(context, listen: false);
-      
+
       // Get user ID
       final userId = await authService.getStoredUserId();
-      
+
       if (userId == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -35,13 +35,14 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
         setState(() => _isAddingToCart = false);
         return;
       }
-      
+
       // Extract food details from arguments
-      final foodId = args?['id'] ?? DateTime.now().millisecondsSinceEpoch.toString();
+      final foodId =
+          args?['id'] ?? DateTime.now().millisecondsSinceEpoch.toString();
       final foodName = args?['name'] ?? 'Surprise Bag';
       final price = (args?['price'] ?? 4.99).toDouble();
       final imageUrl = args?['imageUrl'] ?? '';
-      
+
       // Add to cart
       await dbService.addToCart(
         userId: userId,
@@ -51,7 +52,7 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
         foodImage: imageUrl,
         quantity: 1,
       );
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -69,9 +70,9 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error adding to cart: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error adding to cart: $e')));
       }
     } finally {
       if (mounted) {
@@ -94,8 +95,9 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
     final int quantity = args?['quantity'] ?? 0;
     final String pickupTime = args?['pickupTime'] ?? 'Today';
     final String imageUrl = args?['imageUrl'] ?? '';
-    
-    final int discountPercent = ((originalPrice - price) / originalPrice * 100).round();
+
+    final int discountPercent = ((originalPrice - price) / originalPrice * 100)
+        .round();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA), // Match home screen
@@ -106,11 +108,17 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
             children: [
               // Header with back button
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: width * 0.04, vertical: height * 0.02),
+                padding: EdgeInsets.symmetric(
+                  horizontal: width * 0.04,
+                  vertical: height * 0.02,
+                ),
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Color(0xFF1B5E20)),
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Color(0xFF1B5E20),
+                      ),
                       onPressed: () => Navigator.pop(context),
                     ),
                     const Spacer(),
@@ -142,10 +150,7 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                   ),
                   child: imageUrl.isEmpty
                       ? const Center(
-                          child: Text(
-                            '🥐',
-                            style: TextStyle(fontSize: 80),
-                          ),
+                          child: Text('🥐', style: TextStyle(fontSize: 80)),
                         )
                       : null,
                 ),
@@ -161,7 +166,10 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                   children: [
                     // Save badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFF4CAF50),
                         borderRadius: BorderRadius.circular(20),
@@ -220,7 +228,7 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                     Row(
                       children: [
                         const Text(
-                          'Restaurant', 
+                          'Restaurant',
                           style: TextStyle(
                             fontSize: 16,
                             color: Color(0xFF2E7D32),
@@ -230,7 +238,11 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                         SizedBox(width: width * 0.03),
                         Row(
                           children: [
-                            const Icon(Icons.star, color: Colors.amber, size: 18),
+                            const Icon(
+                              Icons.star,
+                              color: Colors.amber,
+                              size: 18,
+                            ),
                             const SizedBox(width: 4),
                             const Text(
                               '4.9',
@@ -249,7 +261,10 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
 
                     // Hot Deal badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.orange,
                         borderRadius: BorderRadius.circular(20),
@@ -257,10 +272,7 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            '🔥',
-                            style: TextStyle(fontSize: 16),
-                          ),
+                          Text('🔥', style: TextStyle(fontSize: 16)),
                           SizedBox(width: 4),
                           Text(
                             'Hot Deal',
@@ -327,7 +339,6 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                       ),
                     ),
 
-
                     SizedBox(height: height * 0.03),
 
                     // Allergen Info
@@ -369,7 +380,9 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                       width: double.infinity,
                       height: height * 0.065,
                       child: ElevatedButton(
-                        onPressed: _isAddingToCart ? null : () => _addToCart(context, args),
+                        onPressed: _isAddingToCart
+                            ? null
+                            : () => _addToCart(context, args),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF4CAF50),
                           disabledBackgroundColor: Colors.grey.shade400,
@@ -419,9 +432,7 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFA5D6A7).withOpacity(0.3),
-        ),
+        border: Border.all(color: const Color(0xFFA5D6A7).withOpacity(0.3)),
       ),
       child: Row(
         children: [
@@ -433,10 +444,7 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -470,10 +478,7 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
         const SizedBox(width: 12),
         Text(
           text,
-          style: const TextStyle(
-            fontSize: 15,
-            color: Color(0xFF1B5E20),
-          ),
+          style: const TextStyle(fontSize: 15, color: Color(0xFF1B5E20)),
         ),
       ],
     );

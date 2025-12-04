@@ -102,7 +102,8 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
     final double rating = (args?['rating'] ?? 0.0).toDouble();
     final int reviews = args?['reviews'] ?? 0;
     final List tags = args?['tags'] ?? [];
-    final String image = args?['image'] ??
+    final String image =
+        args?['image'] ??
         'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800';
 
     return Scaffold(
@@ -140,9 +141,11 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
               ],
             ),
           ),
-          
+
           StreamBuilder<List<FoodItem>>(
-            stream: Provider.of<FirestoreService>(context).getFoodItemsByRestaurant(restaurantId),
+            stream: Provider.of<FirestoreService>(
+              context,
+            ).getFoodItemsByRestaurant(restaurantId),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
                 return Padding(
@@ -166,14 +169,18 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
 
               return Column(
                 children: items.map((item) {
-                  final discount = ((item.originalPrice - item.price) / item.originalPrice * 100).round();
+                  final discount =
+                      ((item.originalPrice - item.price) /
+                              item.originalPrice *
+                              100)
+                          .round();
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 16, left: 24, right: 24),
-                    child: _itemCard(
-                      item,
-                      discount,
-                      context,
+                    padding: const EdgeInsets.only(
+                      bottom: 16,
+                      left: 24,
+                      right: 24,
                     ),
+                    child: _itemCard(item, discount, context),
                   );
                 }).toList(),
               );
@@ -206,7 +213,11 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _iconButton(Icons.arrow_back, () => Navigator.pop(context), false),
+                _iconButton(
+                  Icons.arrow_back,
+                  () => Navigator.pop(context),
+                  false,
+                ),
                 _iconButton(
                   _isFavorited ? Icons.favorite : Icons.favorite_border,
                   _toggleFavorite,
@@ -246,7 +257,10 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
             Text(
               '$rating ',
               style: const TextStyle(
-                  fontWeight: FontWeight.bold, fontSize: 16, color: _green),
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: _green,
+              ),
             ),
             Text(
               '($reviews reviews)',
@@ -256,7 +270,10 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
         ),
 
         const SizedBox(height: 16),
-        _infoRow(Icons.location_on_outlined, '123 Main Street, San Francisco, CA'),
+        _infoRow(
+          Icons.location_on_outlined,
+          '123 Main Street, San Francisco, CA',
+        ),
         const SizedBox(height: 12),
         _infoRow(Icons.access_time, 'Open today: 7:00 AM - 9:00 PM'),
         const SizedBox(height: 12),
@@ -287,11 +304,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
         const SizedBox(height: 12),
         Text(
           content,
-          style: TextStyle(
-            color: Colors.grey[700],
-            fontSize: 15,
-            height: 1.5,
-          ),
+          style: TextStyle(color: Colors.grey[700], fontSize: 15, height: 1.5),
         ),
       ],
     );
@@ -303,14 +316,13 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border:
-            Border.all(color: const Color(0xFFA5D6A7).withOpacity(0.3)),
+        border: Border.all(color: const Color(0xFFA5D6A7).withOpacity(0.3)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -325,8 +337,11 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: _mediumGreen.withOpacity(0.2)),
                 ),
-                child: const Icon(Icons.bakery_dining,
-                    size: 50, color: _mediumGreen),
+                child: const Icon(
+                  Icons.bakery_dining,
+                  size: 50,
+                  color: _mediumGreen,
+                ),
               ),
               const SizedBox(width: 16),
 
@@ -337,15 +352,15 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                     Text(
                       item.name,
                       style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                          color: _green),
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: _green,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Delicious surprise bag',
-                      style: TextStyle(
-                          color: Colors.grey[600], fontSize: 14),
+                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
                     ),
                     const SizedBox(height: 8),
 
@@ -371,7 +386,9 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                         const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: _mediumGreen,
                             borderRadius: BorderRadius.circular(12),
@@ -379,9 +396,10 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                           child: Text(
                             '$discount% off',
                             style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold),
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
@@ -390,8 +408,11 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.access_time,
-                            size: 14, color: Color(0xFF2E7D32)),
+                        const Icon(
+                          Icons.access_time,
+                          size: 14,
+                          color: Color(0xFF2E7D32),
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           'Pick up: ${item.pickupTime}',
@@ -427,10 +448,12 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                 },
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    item.quantity > 0 ? _mediumGreen : Colors.white,
-                foregroundColor:
-                    item.quantity > 0 ? Colors.white : _mediumGreen,
+                backgroundColor: item.quantity > 0
+                    ? _mediumGreen
+                    : Colors.white,
+                foregroundColor: item.quantity > 0
+                    ? Colors.white
+                    : _mediumGreen,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -442,8 +465,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
               ),
               child: const Text(
                 'Add to Cart',
-                style:
-                    TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -452,7 +474,8 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
     );
   }
 
-  Widget _iconButton(IconData icon, VoidCallback onTap, bool isFavorite) => GestureDetector(
+  Widget _iconButton(IconData icon, VoidCallback onTap, bool isFavorite) =>
+      GestureDetector(
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.all(12),
@@ -464,52 +487,40 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                 color: Colors.black.withOpacity(0.1),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
-              )
+              ),
             ],
           ),
-          child: Icon(
-            icon,
-            size: 24,
-            color: isFavorite ? Colors.red : _green,
-          ),
+          child: Icon(icon, size: 24, color: isFavorite ? Colors.red : _green),
         ),
       );
 
   Widget _infoRow(IconData icon, String text) => Row(
-        children: [
-          Icon(icon, size: 20, color: const Color(0xFF2E7D32)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style:
-                  TextStyle(color: Colors.grey[700], fontSize: 15),
-            ),
-          ),
-        ],
-      );
-
-  Widget _tag(String text) => Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          border: Border.all(
-              color: const Color(0xFFA5D6A7).withOpacity(0.5)),
-          borderRadius: BorderRadius.circular(20),
-          color: _lightGreen.withOpacity(0.5),
-        ),
+    children: [
+      Icon(icon, size: 20, color: const Color(0xFF2E7D32)),
+      const SizedBox(width: 8),
+      Expanded(
         child: Text(
           text,
-          style: const TextStyle(
-              fontSize: 13, color: Color(0xFF2E7D32)),
+          style: TextStyle(color: Colors.grey[700], fontSize: 15),
         ),
-      );
+      ),
+    ],
+  );
 
-  void _showSnack(BuildContext context, String msg) =>
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(msg),
-          backgroundColor: _mediumGreen,
-        ),
-      );
+  Widget _tag(String text) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    decoration: BoxDecoration(
+      border: Border.all(color: const Color(0xFFA5D6A7).withOpacity(0.5)),
+      borderRadius: BorderRadius.circular(20),
+      color: _lightGreen.withOpacity(0.5),
+    ),
+    child: Text(
+      text,
+      style: const TextStyle(fontSize: 13, color: Color(0xFF2E7D32)),
+    ),
+  );
+
+  void _showSnack(BuildContext context, String msg) => ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: _mediumGreen));
 }

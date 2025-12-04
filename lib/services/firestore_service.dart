@@ -22,18 +22,23 @@ class FirestoreService {
   }
 
   // Get restaurants filtered by delivery/pickup
-  Stream<List<Restaurant>> getRestaurantsFiltered({bool? hasDelivery, bool? hasPickup}) {
+  Stream<List<Restaurant>> getRestaurantsFiltered({
+    bool? hasDelivery,
+    bool? hasPickup,
+  }) {
     var query = _db.collection('restaurants') as Query;
-    
+
     if (hasDelivery != null) {
       query = query.where('hasDelivery', isEqualTo: hasDelivery);
     }
     if (hasPickup != null) {
       query = query.where('hasPickup', isEqualTo: hasPickup);
     }
-    
+
     return query.snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => Restaurant.fromFirestore(doc as DocumentSnapshot)).toList();
+      return snapshot.docs
+          .map((doc) => Restaurant.fromFirestore(doc as DocumentSnapshot))
+          .toList();
     });
   }
 
@@ -47,41 +52,52 @@ class FirestoreService {
 
   // Food Items
   Stream<List<FoodItem>> getAvailableFoodItems() {
-    return _db.collection('food_items')
+    return _db
+        .collection('food_items')
         .where('quantity', isGreaterThan: 0)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => FoodItem.fromFirestore(doc)).toList();
-    });
+          return snapshot.docs
+              .map((doc) => FoodItem.fromFirestore(doc))
+              .toList();
+        });
   }
 
   // Get best offers (highest discount percentage)
   Stream<List<FoodItem>> getBestOffers({int limit = 10}) {
-    return _db.collection('food_items')
+    return _db
+        .collection('food_items')
         .where('quantity', isGreaterThan: 0)
         .snapshots()
         .map((snapshot) {
-      var items = snapshot.docs.map((doc) => FoodItem.fromFirestore(doc)).toList();
-      
-      // Sort by discount percentage (highest first)
-      items.sort((a, b) {
-        double discountA = ((a.originalPrice - a.price) / a.originalPrice) * 100;
-        double discountB = ((b.originalPrice - b.price) / b.originalPrice) * 100;
-        return discountB.compareTo(discountA);
-      });
-      
-      // Return top items
-      return items.take(limit).toList();
-    });
+          var items = snapshot.docs
+              .map((doc) => FoodItem.fromFirestore(doc))
+              .toList();
+
+          // Sort by discount percentage (highest first)
+          items.sort((a, b) {
+            double discountA =
+                ((a.originalPrice - a.price) / a.originalPrice) * 100;
+            double discountB =
+                ((b.originalPrice - b.price) / b.originalPrice) * 100;
+            return discountB.compareTo(discountA);
+          });
+
+          // Return top items
+          return items.take(limit).toList();
+        });
   }
 
   Stream<List<FoodItem>> getFoodItemsByRestaurant(String restaurantId) {
-    return _db.collection('food_items')
+    return _db
+        .collection('food_items')
         .where('restaurantId', isEqualTo: restaurantId)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => FoodItem.fromFirestore(doc)).toList();
-    });
+          return snapshot.docs
+              .map((doc) => FoodItem.fromFirestore(doc))
+              .toList();
+        });
   }
 
   // Charities
@@ -102,7 +118,7 @@ class FirestoreService {
     try {
       final base64Image = base64Encode(imageBytes);
       print('💾 Saving image: ${base64Image.length} chars');
-      
+
       if (kIsWeb) {
         // WEB: Save to Firestore (persists across browsers)
         print('🌐 Web: Saving to Firestore');
@@ -134,7 +150,7 @@ class FirestoreService {
   Future<String?> getProfileImageDual(String userId) async {
     try {
       print('🔍 Loading image for user: $userId');
-      
+
       if (kIsWeb) {
         // WEB: Load from Firestore
         print('🌐 Web: Loading from Firestore');

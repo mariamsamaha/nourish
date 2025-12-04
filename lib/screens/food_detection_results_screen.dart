@@ -37,8 +37,9 @@ class _FoodDetectionResultsScreenState
       });
 
       // Analyze the food image
-      final result =
-          await SpoonacularService.instance.analyzeFoodImage(widget.imagePath);
+      final result = await SpoonacularService.instance.analyzeFoodImage(
+        widget.imagePath,
+      );
       final parsed = SpoonacularService.instance.parseAnalysisResult(result);
 
       setState(() {
@@ -69,23 +70,22 @@ class _FoodDetectionResultsScreenState
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
-              ? _buildErrorView()
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      
-                      _buildImageSection(),
-                      const SizedBox(height: 24),
-                      // Detected Ingredients
-                      _buildIngredientsSection(),
-                      const SizedBox(height: 24),
-                      // Nutrition Information
-                      _buildNutritionSection(),
-                    ],
-                  ),
-                ),
+          ? _buildErrorView()
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildImageSection(),
+                  const SizedBox(height: 24),
+                  // Detected Ingredients
+                  _buildIngredientsSection(),
+                  const SizedBox(height: 24),
+                  // Nutrition Information
+                  _buildNutritionSection(),
+                ],
+              ),
+            ),
     );
   }
 
@@ -96,18 +96,11 @@ class _FoodDetectionResultsScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
-            ),
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             Text(
               'Error analyzing image',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
@@ -147,10 +140,7 @@ class _FoodDetectionResultsScreenState
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: Image.file(
-          File(widget.imagePath),
-          fit: BoxFit.cover,
-        ),
+        child: Image.file(File(widget.imagePath), fit: BoxFit.cover),
       ),
     );
   }
@@ -263,10 +253,7 @@ class _FoodDetectionResultsScreenState
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
           ),
           Text(
@@ -282,4 +269,3 @@ class _FoodDetectionResultsScreenState
     );
   }
 }
-

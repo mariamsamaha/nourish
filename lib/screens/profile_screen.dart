@@ -22,7 +22,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _onNavTap(int index) {
     if (index == _currentIndex) return; // Already on this screen
-    
+
     setState(() {
       _currentIndex = index;
     });
@@ -42,19 +42,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('🌱 Seeding database... Please wait.')),
       );
-      
+
       await DataSeeder.seed();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Database seeded successfully! Restart app to see changes.')),
+          const SnackBar(
+            content: Text(
+              '✅ Database seeded successfully! Restart app to see changes.',
+            ),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ Error seeding database: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('❌ Error seeding database: $e')));
       }
     }
   }
@@ -88,7 +92,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+                  border: Border(
+                    bottom: BorderSide(color: Colors.grey.shade200),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -113,11 +119,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.favorite_border, size: 64, color: Colors.grey),
+                            Icon(
+                              Icons.favorite_border,
+                              size: 64,
+                              color: Colors.grey,
+                            ),
                             SizedBox(height: 16),
                             Text(
                               'No favorite restaurants yet',
-                              style: TextStyle(fontSize: 16, color: Colors.grey),
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey,
+                              ),
                             ),
                           ],
                         ),
@@ -128,8 +141,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         itemCount: favorites.length,
                         itemBuilder: (context, index) {
                           final fav = favorites[index];
-                          final tags = fav['restaurant_tags'] as List<dynamic>? ?? [];
-                          
+                          final tags =
+                              fav['restaurant_tags'] as List<dynamic>? ?? [];
+
                           return Card(
                             margin: const EdgeInsets.only(bottom: 12),
                             child: InkWell(
@@ -170,10 +184,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            fav['restaurant_name'] ?? 'Restaurant',
+                                            fav['restaurant_name'] ??
+                                                'Restaurant',
                                             style: const TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
@@ -182,11 +198,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           const SizedBox(height: 4),
                                           Row(
                                             children: [
-                                              const Icon(Icons.star, size: 16, color: Colors.amber),
+                                              const Icon(
+                                                Icons.star,
+                                                size: 16,
+                                                color: Colors.amber,
+                                              ),
                                               const SizedBox(width: 4),
                                               Text(
                                                 '${fav['restaurant_rating'] ?? 0.0} (${fav['restaurant_reviews'] ?? 0})',
-                                                style: const TextStyle(fontSize: 14),
+                                                style: const TextStyle(
+                                                  fontSize: 14,
+                                                ),
                                               ),
                                             ],
                                           ),
@@ -195,14 +217,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           if (tags.isNotEmpty)
                                             Wrap(
                                               spacing: 4,
-                                              children: tags.take(2).map((tag) => Chip(
-                                                label: Text(
-                                                  tag.toString(),
-                                                  style: const TextStyle(fontSize: 11),
-                                                ),
-                                                padding: EdgeInsets.zero,
-                                                visualDensity: VisualDensity.compact,
-                                              )).toList(),
+                                              children: tags
+                                                  .take(2)
+                                                  .map(
+                                                    (tag) => Chip(
+                                                      label: Text(
+                                                        tag.toString(),
+                                                        style: const TextStyle(
+                                                          fontSize: 11,
+                                                        ),
+                                                      ),
+                                                      padding: EdgeInsets.zero,
+                                                      visualDensity:
+                                                          VisualDensity.compact,
+                                                    ),
+                                                  )
+                                                  .toList(),
                                             ),
                                         ],
                                       ),
@@ -222,83 +252,134 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+
   Future<void> _showPersonalInfoModal(BuildContext context) async {
-  final authService = Provider.of<AuthService>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
 
-  final userEmail = await authService.getStoredUserEmail();
+    final userEmail = await authService.getStoredUserEmail();
 
-  String? userName;
-  if (userEmail != null) {
-    userName = userEmail.split('@')[0].replaceAll('.', ' ').split(' ').map((word) =>
-      word.isEmpty ? '' : word[0].toUpperCase() + word.substring(1)
-    ).join(' ');
+    String? userName;
+    if (userEmail != null) {
+      userName = userEmail
+          .split('@')[0]
+          .replaceAll('.', ' ')
+          .split(' ')
+          .map(
+            (word) =>
+                word.isEmpty ? '' : word[0].toUpperCase() + word.substring(1),
+          )
+          .join(' ');
+    }
+
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.55,
+        minChildSize: 0.35,
+        maxChildSize: 0.85,
+        builder: (_, controller) => Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 12,
+                spreadRadius: 2,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Header with title and close button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Personal Information',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 28),
+                    tooltip: 'Close',
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              Expanded(
+                child: ListView(
+                  controller: controller,
+                  padding: EdgeInsets.zero,
+                  children: [
+                    _buildInfoCard(
+                      context,
+                      icon: Icons.person,
+                      iconColor: Colors.teal,
+                      title: userName ?? 'No name available',
+                      subtitle: 'Name',
+                    ),
+                    const SizedBox(height: 16),
+                    _buildInfoCard(
+                      context,
+                      icon: Icons.email,
+                      iconColor: Colors.deepPurple,
+                      title: userEmail ?? 'No email available',
+                      subtitle: 'Email',
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
-  if (!mounted) return;
-
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) => DraggableScrollableSheet(
-      initialChildSize: 0.55,
-      minChildSize: 0.35,
-      maxChildSize: 0.85,
-      builder: (_, controller) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black26,
-              blurRadius: 12,
-              spreadRadius: 2,
-              offset: const Offset(0, -2),
-            )
-          ],
-        ),
-        child: Column(
+  // Helper widget to build an info card
+  Widget _buildInfoCard(
+    BuildContext context, {
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+  }) {
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        child: Row(
           children: [
-            // Header with title and close button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Personal Information',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, size: 28),
-                  tooltip: 'Close',
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
+            Icon(icon, color: iconColor, size: 36),
+            const SizedBox(width: 24),
             Expanded(
-              child: ListView(
-                controller: controller,
-                padding: EdgeInsets.zero,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildInfoCard(
-                    context,
-                    icon: Icons.person,
-                    iconColor: Colors.teal,
-                    title: userName ?? 'No name available',
-                    subtitle: 'Name',
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  _buildInfoCard(
-                    context,
-                    icon: Icons.email,
-                    iconColor: Colors.deepPurple,
-                    title: userEmail ?? 'No email available',
-                    subtitle: 'Email',
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -306,139 +387,91 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-// Helper widget to build an info card
-Widget _buildInfoCard(
-  BuildContext context, {
-  required IconData icon,
-  required Color iconColor,
-  required String title,
-  required String subtitle,
-}) {
-  return Card(
-    elevation: 3,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-      child: Row(
-        children: [
-          Icon(icon, color: iconColor, size: 36),
-          const SizedBox(width: 24),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
+  Future<void> _showAboutNourichModal(BuildContext context) async {
+    if (!mounted) return;
 
-
-Future<void> _showAboutNourichModal(BuildContext context) async {
-  if (!mounted) return;
-
-  showModalBottomSheet(
-  context: context,
-  isScrollControlled: true,
-  backgroundColor: Colors.transparent,
-  builder: (context) => DraggableScrollableSheet(
-    initialChildSize: 0.6,
-    minChildSize: 0.4,
-    maxChildSize: 0.95,
-    builder: (_, controller) => Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: SingleChildScrollView(
-        controller: controller,
-        child: const AboutNourichSection(),
-      ),
-    ),
-  ),
-);
-
-}
-
-Future<void> _showTermsPrivacyModal(BuildContext context) async {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) => DraggableScrollableSheet(
-      initialChildSize: 0.85,
-      minChildSize: 0.5,
-      maxChildSize: 0.95,
-      expand: false,
-      builder: (context, scrollController) {
-        return Container(
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.95,
+        builder: (_, controller) => Container(
           decoration: const BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: SingleChildScrollView(
-            controller: scrollController,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: TermsPrivacySection(),
+            controller: controller,
+            child: const AboutNourichSection(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showTermsPrivacyModal(BuildContext context) async {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (context, scrollController) {
+          return Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
-          ),
-        );
-      },
-    ),
-  );
-}
-
-
-Future<void> _showHelpCenterModal(BuildContext context) async {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) => DraggableScrollableSheet(
-      initialChildSize: 0.85,
-      minChildSize: 0.5,
-      maxChildSize: 0.95,
-      expand: false,
-      builder: (context, scrollController) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: SingleChildScrollView(
-            controller: scrollController,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: HelpCenterSection(),
+            child: SingleChildScrollView(
+              controller: scrollController,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: TermsPrivacySection(),
+              ),
             ),
-          ),
-        );
-      },
-    ),
-  );
-}
+          );
+        },
+      ),
+    );
+  }
 
+  Future<void> _showHelpCenterModal(BuildContext context) async {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (context, scrollController) {
+          return Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: SingleChildScrollView(
+              controller: scrollController,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: HelpCenterSection(),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -447,15 +480,14 @@ Future<void> _showHelpCenterModal(BuildContext context) async {
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
-            
-            SliverToBoxAdapter(
-              child: _ProfileHeader(),
-            ),
+            SliverToBoxAdapter(child: _ProfileHeader()),
 
-            
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: const [
@@ -467,26 +499,29 @@ Future<void> _showHelpCenterModal(BuildContext context) async {
               ),
             ),
 
-            
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: SectionCard(
                   items: [
-                    SectionItem(icon: Icons.person, label: 'Personal Information', background: Colors.blue.shade50, iconColor: Colors.blue.shade600),
-                     ],
+                    SectionItem(
+                      icon: Icons.person,
+                      label: 'Personal Information',
+                      background: Colors.blue.shade50,
+                      iconColor: Colors.blue.shade600,
+                    ),
+                  ],
                   onTap: (index) {
-                   if (index == 0) {
-                    _showPersonalInfoModal(context);
-                  }
-                },
+                    if (index == 0) {
+                      _showPersonalInfoModal(context);
+                    }
+                  },
                 ),
               ),
             ),
 
             SliverToBoxAdapter(child: const SizedBox(height: 16)),
 
-            
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -498,8 +533,18 @@ Future<void> _showHelpCenterModal(BuildContext context) async {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: SectionCard(
                   items: [
-                    SectionItem(icon: Icons.favorite, label: 'Favorite Restaurants', background: Colors.red.shade50, iconColor: Colors.red.shade600),
-                    SectionItem(icon: Icons.camera_alt, label: 'Scan Food', background: Colors.green.shade50, iconColor: Colors.green.shade600),
+                    SectionItem(
+                      icon: Icons.favorite,
+                      label: 'Favorite Restaurants',
+                      background: Colors.red.shade50,
+                      iconColor: Colors.red.shade600,
+                    ),
+                    SectionItem(
+                      icon: Icons.camera_alt,
+                      label: 'Scan Food',
+                      background: Colors.green.shade50,
+                      iconColor: Colors.green.shade600,
+                    ),
                   ],
                   onTap: (index) {
                     if (index == 0) {
@@ -514,7 +559,6 @@ Future<void> _showHelpCenterModal(BuildContext context) async {
 
             SliverToBoxAdapter(child: const SizedBox(height: 16)),
 
-            
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -526,14 +570,29 @@ Future<void> _showHelpCenterModal(BuildContext context) async {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: SectionCard(
                   items: [
-                    SectionItem(icon: Icons.help_outline, label: 'Help Center', background: Colors.cyan.shade50, iconColor: Colors.cyan.shade600),
-                    SectionItem(icon: null, label: 'About Nourish', background: null, iconColor: null),
-                    SectionItem(icon: null, label: 'Terms & Privacy', background: null, iconColor: null),
+                    SectionItem(
+                      icon: Icons.help_outline,
+                      label: 'Help Center',
+                      background: Colors.cyan.shade50,
+                      iconColor: Colors.cyan.shade600,
+                    ),
+                    SectionItem(
+                      icon: null,
+                      label: 'About Nourish',
+                      background: null,
+                      iconColor: null,
+                    ),
+                    SectionItem(
+                      icon: null,
+                      label: 'Terms & Privacy',
+                      background: null,
+                      iconColor: null,
+                    ),
                   ],
                   onTap: (index) {
                     if (index == 1) {
                       _showAboutNourichModal(context);
-                    } else if (index==2){
+                    } else if (index == 2) {
                       _showTermsPrivacyModal(context);
                     } else {
                       _showHelpCenterModal(context);
@@ -576,22 +635,26 @@ Future<void> _showHelpCenterModal(BuildContext context) async {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: LogoutButton(onPressed: () async {
-                  final authService = Provider.of<AuthService>(context, listen: false);
-                  await authService.signOut();
-                  if (mounted) {
-                    Navigator.of(context).pushNamedAndRemoveUntil(
-                      AppRoutes.welcome,
-                      (route) => false,
+                child: LogoutButton(
+                  onPressed: () async {
+                    final authService = Provider.of<AuthService>(
+                      context,
+                      listen: false,
                     );
-                  }
-                }),
+                    await authService.signOut();
+                    if (mounted) {
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                        AppRoutes.welcome,
+                        (route) => false,
+                      );
+                    }
+                  },
+                ),
               ),
             ),
 
             SliverToBoxAdapter(child: const SizedBox(height: 12)),
 
-            
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -615,7 +678,6 @@ Future<void> _showHelpCenterModal(BuildContext context) async {
   }
 }
 
-
 class _ProfileHeader extends StatefulWidget {
   const _ProfileHeader({super.key});
 
@@ -626,8 +688,8 @@ class _ProfileHeader extends StatefulWidget {
 class _ProfileHeaderState extends State<_ProfileHeader> {
   String _userEmail = 'Loading...';
   String _userName = 'User';
-  File? _profileImageFile;  // Temporary during selection
-  String? _profileImageBase64;  // Stored in database
+  File? _profileImageFile; // Temporary during selection
+  String? _profileImageBase64; // Stored in database
   bool _isUploading = false;
 
   final _picker = ImagePicker();
@@ -645,10 +707,18 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
 
       final storedEmail = await authService.getStoredUserEmail();
       final userId = await authService.getStoredUserId();
-      
+
       final storedName = storedEmail != null
-          ? storedEmail.split('@')[0].replaceAll('.', ' ').split(' ').map((word) =>
-              word.isEmpty ? '' : word[0].toUpperCase() + word.substring(1)).join(' ')
+          ? storedEmail
+                .split('@')[0]
+                .replaceAll('.', ' ')
+                .split(' ')
+                .map(
+                  (word) => word.isEmpty
+                      ? ''
+                      : word[0].toUpperCase() + word.substring(1),
+                )
+                .join(' ')
           : 'User';
 
       // Load profile image from database (SQLite on mobile, Firestore on web)
@@ -720,14 +790,15 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                       backgroundColor: Colors.grey.shade200,
                       backgroundImage: _profileImageBase64 != null
                           ? MemoryImage(base64Decode(_profileImageBase64!))
-                          : _profileImageFile != null 
-                              ? FileImage(_profileImageFile!) as ImageProvider
-                              : null,
+                          : _profileImageFile != null
+                          ? FileImage(_profileImageFile!) as ImageProvider
+                          : null,
                       child: _isUploading
                           ? const CircularProgressIndicator()
-                          : (_profileImageBase64 == null && _profileImageFile == null)
-                              ? const Icon(Icons.person, size: 50)
-                              : null,
+                          : (_profileImageBase64 == null &&
+                                _profileImageFile == null)
+                          ? const Icon(Icons.person, size: 50)
+                          : null,
                     ),
                     Positioned(
                       right: 0,
@@ -741,10 +812,14 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.white, width: 2),
                           ),
-                          child: const Icon(Icons.edit, color: Colors.white, size: 20),
+                          child: const Icon(
+                            Icons.edit,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ),
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -777,7 +852,7 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                   final newName = nameController.text.trim();
                   final newEmail = emailController.text.trim();
 
-                  // TODO: Implementing the saving logic 
+                  // TODO: Implementing the saving logic
 
                   setState(() {
                     _userName = newName;
@@ -828,11 +903,14 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
 
   Future<void> _pickImage(ImageSource source) async {
     try {
-      final pickedFile = await _picker.pickImage(source: source, imageQuality: 85);
+      final pickedFile = await _picker.pickImage(
+        source: source,
+        imageQuality: 85,
+      );
 
       if (pickedFile != null) {
         print('🖼️ Image picked');
-        
+
         setState(() {
           _profileImageFile = File(pickedFile.path);
           _isUploading = true;
@@ -841,33 +919,33 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
         final authService = Provider.of<AuthService>(context, listen: false);
         final userId = await authService.getStoredUserId();
         final userEmail = await authService.getStoredUserEmail();
-        
+
         print('👤 UserId: $userId, Email: $userEmail');
-        
+
         if (userId != null && userEmail != null) {
           try {
             print('📤 Reading image...');
             final imageBytes = await pickedFile.readAsBytes();
             print('📦 Read ${imageBytes.length} bytes');
-            
+
             print('💾 Saving to database...');
             await _storageService.saveProfileImageDual(
               userId: userId,
               userEmail: userEmail,
               imageBytes: imageBytes,
             );
-            
+
             // Convert to base64 for display
             final base64Image = base64Encode(imageBytes);
-            
+
             print('✅ Save complete!');
-            
+
             setState(() {
               _profileImageBase64 = base64Image;
               _isUploading = false;
               _profileImageFile = null;
             });
-            
+
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -899,9 +977,9 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to pick image: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to pick image: $e')));
       }
     }
   }
@@ -931,17 +1009,18 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                       backgroundImage: _profileImageBase64 != null
                           ? MemoryImage(base64Decode(_profileImageBase64!))
                           : _profileImageFile != null
-                              ? FileImage(_profileImageFile!) as ImageProvider
-                              : null,
+                          ? FileImage(_profileImageFile!) as ImageProvider
+                          : null,
                       child: _isUploading
                           ? const SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : (_profileImageBase64 == null && _profileImageFile == null)
-                              ? const Text('👤', style: TextStyle(fontSize: 28))
-                              : null,
+                          : (_profileImageBase64 == null &&
+                                _profileImageFile == null)
+                          ? const Text('👤', style: TextStyle(fontSize: 28))
+                          : null,
                     ),
                     Positioned(
                       right: -4,
@@ -955,9 +1034,19 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                             color: Colors.green.shade500,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(color: Colors.white, width: 2),
-                            boxShadow: const [BoxShadow(blurRadius: 6, color: Colors.black12, offset: Offset(0, 2))],
+                            boxShadow: const [
+                              BoxShadow(
+                                blurRadius: 6,
+                                color: Colors.black12,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
                           ),
-                          child: const Icon(Icons.edit, color: Colors.white, size: 16),
+                          child: const Icon(
+                            Icons.edit,
+                            color: Colors.white,
+                            size: 16,
+                          ),
                         ),
                       ),
                     ),
@@ -967,14 +1056,27 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_userName, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+                    Text(
+                      _userName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    Text(_userEmail, style: TextStyle(color: Colors.green.shade100, fontSize: 13)),
+                    Text(
+                      _userEmail,
+                      style: TextStyle(
+                        color: Colors.green.shade100,
+                        fontSize: 13,
+                      ),
+                    ),
                   ],
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
 
             Row(
@@ -990,7 +1092,6 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
     );
   }
 }
-
 
 class StatTile extends StatelessWidget {
   final String value;
@@ -1010,9 +1111,22 @@ class StatTile extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Text(value, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 4),
-            Text(label, style: TextStyle(color: Colors.greenAccent.shade100, fontSize: 12)),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.greenAccent.shade100,
+                fontSize: 12,
+              ),
+            ),
           ],
         ),
       ),
@@ -1020,10 +1134,9 @@ class StatTile extends StatelessWidget {
   }
 }
 
-
 class SectionCard extends StatelessWidget {
   final List<SectionItem> items;
-  final Function(int index)? onTap; 
+  final Function(int index)? onTap;
 
   const SectionCard({super.key, required this.items, this.onTap});
 
@@ -1059,14 +1172,20 @@ class SectionCard extends StatelessWidget {
                             color: item.background ?? Colors.grey.shade100,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Icon(item.icon, color: item.iconColor ?? Colors.black54),
+                          child: Icon(
+                            item.icon,
+                            color: item.iconColor ?? Colors.black54,
+                          ),
                         )
                       else
                         const SizedBox(width: 8),
 
                       const SizedBox(width: 12),
 
-                      Text(item.label, style: TextStyle(color: Colors.grey[900])),
+                      Text(
+                        item.label,
+                        style: TextStyle(color: Colors.grey[900]),
+                      ),
                     ],
                   ),
                   const Icon(Icons.chevron_right, color: Colors.grey),
@@ -1086,7 +1205,12 @@ class SectionItem {
   final Color? background;
   final Color? iconColor;
 
-  SectionItem({this.icon, required this.label, this.background, this.iconColor});
+  SectionItem({
+    this.icon,
+    required this.label,
+    this.background,
+    this.iconColor,
+  });
 }
 
 class LogoutButton extends StatelessWidget {
@@ -1103,7 +1227,9 @@ class LogoutButton extends StatelessWidget {
         label: const Text('Log Out', style: TextStyle(color: Colors.redAccent)),
         style: OutlinedButton.styleFrom(
           side: BorderSide(color: Colors.red.shade200, width: 1.5),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           backgroundColor: Colors.white,
         ),
       ),
@@ -1117,7 +1243,14 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(title, style: TextStyle(color: Colors.grey[900], fontSize: 16, fontWeight: FontWeight.w600));
+    return Text(
+      title,
+      style: TextStyle(
+        color: Colors.grey[900],
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+      ),
+    );
   }
 }
 
@@ -1140,7 +1273,11 @@ class AboutNourichSection extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.recycling_rounded, color: Colors.green.shade700, size: 28),
+                  Icon(
+                    Icons.recycling_rounded,
+                    color: Colors.green.shade700,
+                    size: 28,
+                  ),
                   const SizedBox(width: 12),
                   Text(
                     'About Nourich',
@@ -1186,7 +1323,6 @@ class AboutNourichSection extends StatelessWidget {
                   color: Colors.grey[800],
                 ),
               ),
-              
             ],
           ),
         ),
@@ -1194,6 +1330,7 @@ class AboutNourichSection extends StatelessWidget {
     );
   }
 }
+
 class HelpCenterSection extends StatefulWidget {
   const HelpCenterSection({super.key});
 
@@ -1205,23 +1342,28 @@ class _HelpCenterSectionState extends State<HelpCenterSection> {
   final List<_FaqItem> _faqItems = [
     _FaqItem(
       question: 'How do I place an order?',
-      answer: 'Browse restaurants, select your favorite meals, and follow the checkout process to place an order.',
+      answer:
+          'Browse restaurants, select your favorite meals, and follow the checkout process to place an order.',
     ),
     _FaqItem(
       question: 'How do I add favorite restaurants?',
-      answer: 'Tap the heart icon on any restaurant’s page to add it to your favorites.',
+      answer:
+          'Tap the heart icon on any restaurant’s page to add it to your favorites.',
     ),
     _FaqItem(
       question: 'Can I donate food through Nourich?',
-      answer: 'Yes! You can donate leftover food to local charities and food banks using our donation feature.',
+      answer:
+          'Yes! You can donate leftover food to local charities and food banks using our donation feature.',
     ),
     _FaqItem(
       question: 'How do I view my account details?',
-      answer: 'Go to Personal Information in your profile to view your name and email.',
+      answer:
+          'Go to Personal Information in your profile to view your name and email.',
     ),
     _FaqItem(
       question: 'What payment methods are accepted?',
-      answer: 'We accept credit cards, debit cards, and some mobile payment options.',
+      answer:
+          'We accept credit cards, debit cards, and some mobile payment options.',
     ),
   ];
 
@@ -1258,7 +1400,10 @@ class _HelpCenterSectionState extends State<HelpCenterSection> {
                       });
                     },
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 8,
+                      ),
                       child: Row(
                         children: [
                           Expanded(
@@ -1280,7 +1425,11 @@ class _HelpCenterSectionState extends State<HelpCenterSection> {
                   ),
                   if (isExpanded)
                     Padding(
-                      padding: const EdgeInsets.only(left: 16, right: 8, bottom: 12),
+                      padding: const EdgeInsets.only(
+                        left: 16,
+                        right: 8,
+                        bottom: 12,
+                      ),
                       child: Text(
                         faq.answer,
                         style: theme.textTheme.bodyMedium?.copyWith(
@@ -1365,7 +1514,6 @@ class TermsPrivacySection extends StatelessWidget {
                     color: Colors.grey[800],
                   ),
                 ),
-                
               ],
             ),
           ),

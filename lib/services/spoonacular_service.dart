@@ -23,15 +23,13 @@ class SpoonacularService {
 
       // CRITICAL: API key MUST be in URL query parameters (not request.fields)
       final uri = Uri.https(_baseURL, '/food/images/analyze', {
-        'apiKey': _apiKey,  // ← This is the ONLY correct way
+        'apiKey': _apiKey, // ← This is the ONLY correct way
       });
-      
+
       final request = http.MultipartRequest('POST', uri);
-      
+
       // Add the image file
-      request.files.add(
-        await http.MultipartFile.fromPath('file', imagePath),
-      );
+      request.files.add(await http.MultipartFile.fromPath('file', imagePath));
 
       // Send request
       final streamedResponse = await request.send();
@@ -51,14 +49,10 @@ class SpoonacularService {
   /// Detect food items in an image using image URL
   Future<Map<String, dynamic>> detectFoodByImageUrl(String imageUrl) async {
     try {
-      final uri = Uri.https(
-        _baseURL,
-        '/food/detect',
-        {
-          'apiKey': _apiKey,
-          'imageUrl': imageUrl,
-        },
-      );
+      final uri = Uri.https(_baseURL, '/food/detect', {
+        'apiKey': _apiKey,
+        'imageUrl': imageUrl,
+      });
 
       final response = await http.get(uri);
 
@@ -73,17 +67,15 @@ class SpoonacularService {
   }
 
   /// Get nutrition information for detected ingredients
-  Future<Map<String, dynamic>> getNutritionInfo(List<String> ingredients) async {
+  Future<Map<String, dynamic>> getNutritionInfo(
+    List<String> ingredients,
+  ) async {
     try {
       final ingredientsString = ingredients.join(',');
-      final uri = Uri.https(
-        _baseURL,
-        '/recipes/guessNutrition',
-        {
-          'apiKey': _apiKey,
-          'title': ingredientsString,
-        },
-      );
+      final uri = Uri.https(_baseURL, '/recipes/guessNutrition', {
+        'apiKey': _apiKey,
+        'title': ingredientsString,
+      });
 
       final response = await http.get(uri);
 
@@ -100,14 +92,10 @@ class SpoonacularService {
   /// Get detailed recipe information by ID
   Future<Map<String, dynamic>> getRecipeInfo(int recipeId) async {
     try {
-      final uri = Uri.https(
-        _baseURL,
-        '/recipes/$recipeId/information',
-        {
-          'apiKey': _apiKey,
-          'includeNutrition': 'true',
-        },
-      );
+      final uri = Uri.https(_baseURL, '/recipes/$recipeId/information', {
+        'apiKey': _apiKey,
+        'includeNutrition': 'true',
+      });
 
       final response = await http.get(uri);
 
@@ -154,4 +142,3 @@ class SpoonacularService {
     }
   }
 }
-

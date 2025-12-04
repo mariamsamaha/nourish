@@ -12,12 +12,12 @@ class AuthService {
 
   // Stream of auth state changes
   Stream<User?> get authStateChanges => _auth.authStateChanges();
-  
+
   // Get stored user ID from shared preferences
   Future<String?> getStoredUserId() async {
     return await _storage.getUserId();
   }
-  
+
   // Get stored user email from shared preferences
   Future<String?> getStoredUserEmail() async {
     return await _storage.getUserEmail();
@@ -27,7 +27,7 @@ class AuthService {
   Future<String?> getStoredUserName() async {
     return await _storage.getUserName();
   }
-  
+
   // Check if user has a valid session stored
   Future<bool> hasStoredSession() async {
     return await _storage.isUserLoggedIn();
@@ -40,7 +40,7 @@ class AuthService {
         email: email,
         password: password,
       );
-      
+
       // Save user data to shared preferences
       if (credential.user != null) {
         await _storage.saveUserData(
@@ -48,7 +48,7 @@ class AuthService {
           email: credential.user!.email ?? email,
         );
       }
-      
+
       return credential;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
@@ -62,7 +62,7 @@ class AuthService {
         email: email,
         password: password,
       );
-      
+
       // Save user data to shared preferences
       if (credential.user != null) {
         await _storage.saveUserData(
@@ -70,7 +70,7 @@ class AuthService {
           email: credential.user!.email ?? email,
         );
       }
-      
+
       return credential;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
@@ -82,14 +82,15 @@ class AuthService {
     try {
       // Trigger the Google Sign-In flow
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      
+
       // If user cancels the sign-in flow
       if (googleUser == null) {
         throw 'Google sign-in was cancelled';
       }
 
       // Obtain the auth details from the request
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
       // Create a new credential
       final credential = GoogleAuthProvider.credential(
@@ -99,7 +100,7 @@ class AuthService {
 
       // Sign in to Firebase with the Google credential
       final userCredential = await _auth.signInWithCredential(credential);
-      
+
       // Save user data to shared preferences
       if (userCredential.user != null) {
         await _storage.saveUserData(
@@ -107,7 +108,7 @@ class AuthService {
           email: userCredential.user!.email ?? googleUser.email,
         );
       }
-      
+
       return userCredential;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
@@ -144,4 +145,3 @@ class AuthService {
     }
   }
 }
-
