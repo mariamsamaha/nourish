@@ -5,8 +5,10 @@ import 'package:proj/routes/app_routes.dart';
 import 'package:proj/services/data_seeder.dart';
 import 'package:proj/services/auth_service.dart';
 import 'package:proj/services/database_service.dart';
+import 'package:proj/services/firestore_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'dart:convert';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -624,9 +626,12 @@ class _ProfileHeader extends StatefulWidget {
 class _ProfileHeaderState extends State<_ProfileHeader> {
   String _userEmail = 'Loading...';
   String _userName = 'User';
-  File? _profileImageFile;
+  File? _profileImageFile;  // Temporary during selection
+  String? _profileImageBase64;  // Stored in database
+  bool _isUploading = false;
 
   final _picker = ImagePicker();
+  final _storageService = FirestoreService();
 
   @override
   void initState() {
@@ -639,14 +644,23 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
       final authService = Provider.of<AuthService>(context, listen: false);
 
       final storedEmail = await authService.getStoredUserEmail();
+      final userId = await authService.getStoredUserId();
+      
       final storedName = storedEmail != null
           ? storedEmail.split('@')[0].replaceAll('.', ' ').split(' ').map((word) =>
               word.isEmpty ? '' : word[0].toUpperCase() + word.substring(1)).join(' ')
           : 'User';
 
+      // Load profile image from database (SQLite on mobile, Firestore on web)
+      String? imageBase64;
+      if (userId != null) {
+        imageBase64 = await _storageService.getProfileImageDual(userId);
+      }
+
       setState(() {
         _userEmail = storedEmail ?? 'No email found';
         _userName = storedName;
+        _profileImageBase64 = imageBase64;
       });
     } catch (e) {
       setState(() {
@@ -704,9 +718,16 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                     CircleAvatar(
                       radius: 50,
                       backgroundColor: Colors.grey.shade200,
-                      backgroundImage:
-                          _profileImageFile != null ? FileImage(_profileImageFile!) : null,
-                      child: _profileImageFile == null ? const Icon(Icons.person, size: 50) : null,
+                      backgroundImage: _profileImageBase64 != null
+                          ? MemoryImage(base64Decode(_profileImageBase64!))
+                          : _profileImageFile != null 
+                              ? FileImage(_profileImageFile!) as ImageProvider
+                              : null,
+                      child: _isUploading
+                          ? const CircularProgressIndicator()
+                          : (_profileImageBase64 == null && _profileImageFile == null)
+                              ? const Icon(Icons.person, size: 50)
+                              : null,
                     ),
                     Positioned(
                       right: 0,
@@ -810,16 +831,78 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
       final pickedFile = await _picker.pickImage(source: source, imageQuality: 85);
 
       if (pickedFile != null) {
+        print('🖼️ Image picked');
+        
         setState(() {
           _profileImageFile = File(pickedFile.path);
+          _isUploading = true;
         });
 
+        final authService = Provider.of<AuthService>(context, listen: false);
+        final userId = await authService.getStoredUserId();
+        final userEmail = await authService.getStoredUserEmail();
         
+        print('👤 UserId: $userId, Email: $userEmail');
+        
+        if (userId != null && userEmail != null) {
+          try {
+            print('📤 Reading image...');
+            final imageBytes = await pickedFile.readAsBytes();
+            print('📦 Read ${imageBytes.length} bytes');
+            
+            print('💾 Saving to database...');
+            await _storageService.saveProfileImageDual(
+              userId: userId,
+              userEmail: userEmail,
+              imageBytes: imageBytes,
+            );
+            
+            // Convert to base64 for display
+            final base64Image = base64Encode(imageBytes);
+            
+            print('✅ Save complete!');
+            
+            setState(() {
+              _profileImageBase64 = base64Image;
+              _isUploading = false;
+              _profileImageFile = null;
+            });
+            
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Profile image saved!'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
+          } catch (e) {
+            print('❌ Save FAILED: $e');
+            setState(() {
+              _isUploading = false;
+            });
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Save failed: $e'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
+        } else {
+          print('❌ Missing userId or email!');
+          setState(() {
+            _isUploading = false;
+          });
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to pick image: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to pick image: $e')),
+        );
+      }
     }
   }
 
@@ -845,10 +928,20 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                     CircleAvatar(
                       radius: 36,
                       backgroundColor: Colors.white,
-                      backgroundImage: _profileImageFile != null ? FileImage(_profileImageFile!) : null,
-                      child: _profileImageFile == null
-                          ? const Text('👤', style: TextStyle(fontSize: 28))
-                          : null,
+                      backgroundImage: _profileImageBase64 != null
+                          ? MemoryImage(base64Decode(_profileImageBase64!))
+                          : _profileImageFile != null
+                              ? FileImage(_profileImageFile!) as ImageProvider
+                              : null,
+                      child: _isUploading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : (_profileImageBase64 == null && _profileImageFile == null)
+                              ? const Text('👤', style: TextStyle(fontSize: 28))
+                              : null,
                     ),
                     Positioned(
                       right: -4,

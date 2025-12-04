@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 
 /// Service to manage local cart storage.
@@ -30,7 +31,7 @@ class DatabaseService {
     
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,  // Updated version
       onCreate: (Database db, int version) async {
         await db.execute('''
           CREATE TABLE $_tableName (
@@ -70,6 +71,16 @@ class DatabaseService {
             UNIQUE(user_id, restaurant_id)
           )
         ''');
+        
+        await db.execute('''
+          CREATE TABLE profile_images (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL UNIQUE,
+            email TEXT NOT NULL,
+            image_base64 TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+          )
+        ''');
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         if (oldVersion < 2) {
@@ -96,6 +107,17 @@ class DatabaseService {
               restaurant_tags TEXT,
               created_at TEXT NOT NULL,
               UNIQUE(user_id, restaurant_id)
+            )
+          ''');
+        }
+        if (oldVersion < 4) {
+          await db.execute('''
+            CREATE TABLE profile_images (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              user_id TEXT NOT NULL UNIQUE,
+              email TEXT NOT NULL,
+              image_base64 TEXT NOT NULL,
+              updated_at TEXT NOT NULL
             )
           ''');
         }
@@ -476,39 +498,7 @@ class DatabaseService {
 
   // ===== FAVORITE RESTAURANTS METHODS =====
 
-  static const String _favoriteRestaurantsKey = 'favorite_restaurants';
-
-  /// Load favorite restaurants from SharedPreferences (web only)
-  Future<Map<String, List<Map<String, dynamic>>>> _loadFavoriteRestaurantsFromPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    final prefsJson = prefs.getString(_favoriteRestaurantsKey);
-    
-    if (prefsJson == null) {
-      return {};
-    }
-    
-    try {
-      final Map<String, dynamic> decoded = json.decode(prefsJson);
-      final Map<String, List<Map<String, dynamic>>> result = {};
-      
-      decoded.forEach((userId, restaurants) {
-        result[userId] = List<Map<String, dynamic>>.from(restaurants);
-      });
-      
-      return result;
-    } catch (e) {
-      return {};
-    }
-  }
-
-  /// Save favorite restaurants to SharedPreferences (web only)
-  Future<void> _saveFavoriteRestaurantsToPrefs(Map<String, List<Map<String, dynamic>>> prefsData) async {
-    final prefs = await SharedPreferences.getInstance();
-    final prefsJson = json.encode(prefsData);
-    await prefs.setString(_favoriteRestaurantsKey, prefsJson);
-  }
-
-  /// Add a restaurant to user's favorites
+  /// Add a restaurant to user's favorites (Firestore on web, SQLite on mobile)
   Future<void> addFavoriteRestaurant({
     required String userId,
     required String restaurantId,
@@ -519,26 +509,24 @@ class DatabaseService {
     List<String>? restaurantTags,
   }) async {
     if (kIsWeb) {
-      // Web implementation
-      final prefsData = await _loadFavoriteRestaurantsFromPrefs();
-      final userFavorites = prefsData[userId] ?? [];
-      
-      // Check if already exists
-      if (!userFavorites.any((r) => r['restaurant_id'] == restaurantId)) {
-        userFavorites.add({
-          'restaurant_id': restaurantId,
-          'restaurant_name': restaurantName,
-          'restaurant_image': restaurantImage,
-          'restaurant_rating': restaurantRating,
-          'restaurant_reviews': restaurantReviews,
-          'restaurant_tags': restaurantTags?.join(','),
-          'created_at': DateTime.now().toIso8601String(),
-        });
-        prefsData[userId] = userFavorites;
-        await _saveFavoriteRestaurantsToPrefs(prefsData);
-      }
+      // WEB: Save to Firestore (cross-browser)
+      final firestore = FirebaseFirestore.instance;
+      await firestore
+          .collection('userFavorites')
+          .doc(userId)
+          .collection('restaurants')
+          .doc(restaurantId)
+          .set({
+        'restaurant_id': restaurantId,
+        'restaurant_name': restaurantName,
+        'restaurant_image': restaurantImage,
+        'restaurant_rating': restaurantRating,
+        'restaurant_reviews': restaurantReviews,
+        'restaurant_tags': restaurantTags,
+        'created_at': FieldValue.serverTimestamp(),
+      });
     } else {
-      // Mobile/Desktop implementation
+      // MOBILE: Save to SQLite
       final db = await database;
       
       try {
@@ -562,21 +550,22 @@ class DatabaseService {
     }
   }
 
-  /// Remove a restaurant from user's favorites
+  /// Remove a restaurant from user's favorites (Firestore on web, SQLite on mobile)
   Future<void> removeFavoriteRestaurant({
     required String userId,
     required String restaurantId,
   }) async {
     if (kIsWeb) {
-      // Web implementation
-      final prefsData = await _loadFavoriteRestaurantsFromPrefs();
-      final userFavorites = prefsData[userId] ?? [];
-      
-      userFavorites.removeWhere((r) => r['restaurant_id'] == restaurantId);
-      prefsData[userId] = userFavorites;
-      await _saveFavoriteRestaurantsToPrefs(prefsData);
+      // WEB: Remove from Firestore
+      final firestore = FirebaseFirestore.instance;
+      await firestore
+          .collection('userFavorites')
+          .doc(userId)
+          .collection('restaurants')
+          .doc(restaurantId)
+          .delete();
     } else {
-      // Mobile/Desktop implementation
+      // MOBILE: Remove from SQLite
       final db = await database;
       await db.delete(
         'favorite_restaurants',
@@ -586,23 +575,27 @@ class DatabaseService {
     }
   }
 
-  /// Get all favorite restaurants for a user
+  /// Get all favorite restaurants for a user (Firestore on web, SQLite on mobile)
   Future<List<Map<String, dynamic>>> getFavoriteRestaurants(String userId) async {
     if (kIsWeb) {
-      // Web implementation
-      final prefsData = await _loadFavoriteRestaurantsFromPrefs();
-      final favorites = prefsData[userId] ?? [];
+      // WEB: Load from Firestore
+      final firestore = FirebaseFirestore.instance;
+      final snapshot = await firestore
+          .collection('userFavorites')
+          .doc(userId)
+          .collection('restaurants')
+          .orderBy('created_at', descending: true)
+          .get();
       
-      // Parse tags back to list
-      return favorites.map((r) {
-        final tags = r['restaurant_tags'] as String?;
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
         return {
-          ...r,
-          'restaurant_tags': tags != null && tags.isNotEmpty ? tags.split(',') : <String>[],
+          ...data,
+          'restaurant_id': doc.id,
         };
       }).toList();
     } else {
-      // Mobile/Desktop implementation
+      // MOBILE: Load from SQLite
       final db = await database;
       final results = await db.query(
         'favorite_restaurants',
@@ -622,18 +615,24 @@ class DatabaseService {
     }
   }
 
-  /// Check if a restaurant is favorited by user
+  /// Check if a restaurant is favorited by user (Firestore on web, SQLite on mobile)
   Future<bool> isRestaurantFavorited({
     required String userId,
     required String restaurantId,
   }) async {
     if (kIsWeb) {
-      // Web implementation
-      final prefsData = await _loadFavoriteRestaurantsFromPrefs();
-      final userFavorites = prefsData[userId] ?? [];
-      return userFavorites.any((r) => r['restaurant_id'] == restaurantId);
+      // WEB: Check in Firestore
+      final firestore = FirebaseFirestore.instance;
+      final doc = await firestore
+          .collection('userFavorites')
+          .doc(userId)
+          .collection('restaurants')
+          .doc(restaurantId)
+          .get();
+      
+      return doc.exists;
     } else {
-      // Mobile/Desktop implementation
+      // MOBILE: Check in SQLite
       final db = await database;
       final results = await db.query(
         'favorite_restaurants',
@@ -642,6 +641,57 @@ class DatabaseService {
       );
       
       return results.isNotEmpty;
+    }
+  }
+
+  // ===== PROFILE IMAGE METHODS =====
+
+  /// Save profile image (SQLite on mobile, SharedPreferences on web)
+  Future<void> saveProfileImage({
+    required String userId,
+    required String userEmail,
+    required String imageBase64,
+  }) async {
+    if (kIsWeb) {
+      // Web: use SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('profile_image_$userId', imageBase64);
+      await prefs.setString('profile_email_$userId', userEmail);
+    } else {
+      // Mobile: use SQLite
+      final db = await database;
+      await db.insert(
+        'profile_images',
+        {
+          'user_id': userId,
+          'email': userEmail,
+          'image_base64': imageBase64,
+          'updated_at': DateTime.now().toIso8601String(),
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+  }
+
+  /// Get profile image (SQLite on mobile, SharedPreferences on web)
+  Future<String?> getProfileImage(String userId) async {
+    if (kIsWeb) {
+      // Web: use SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('profile_image_$userId');
+    } else {
+      // Mobile: use SQLite
+      final db = await database;
+      final results = await db.query(
+        'profile_images',
+        where: 'user_id = ?',
+        whereArgs: [userId],
+      );
+      
+      if (results.isNotEmpty) {
+        return results.first['image_base64'] as String?;
+      }
+      return null;
     }
   }
 

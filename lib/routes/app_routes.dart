@@ -14,6 +14,7 @@ import 'package:proj/screens/subscription_screen.dart';
 import 'package:proj/screens/camera_screen.dart';
 import 'package:proj/screens/food_detection_results_screen.dart';
 import 'package:proj/middleware/auth_guard.dart';
+import 'package:proj/screens/paymob_success_screen.dart';
 
 class AppRoutes {
   static const String welcome = '/';
@@ -29,6 +30,7 @@ class AppRoutes {
   static const String subscription = '/subscription';
   static const String camera = '/camera';
   static const String foodDetectionResults = '/food_detection_results';
+  static const String paymobSuccess = '/paymob-success';
   
   static Map<String, WidgetBuilder> routes = {
     // Public routes (no auth required)
@@ -45,5 +47,6 @@ class AppRoutes {
     charity: (context) => const AuthGuard(child: CharityScreen()),
     profile: (context) => const AuthGuard(child: ProfileScreen()),
     subscription: (context) => const AuthGuard(child: SubscriptionScreen()),
+    paymobSuccess: (context) => const PaymobSuccessScreen(),
   };
 }

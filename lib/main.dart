@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:app_links/app_links.dart';
+import 'dart:async';
 import 'routes/app_routes.dart';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -61,14 +63,71 @@ Future<void> main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+class MyApp extends StatefulWidget {
   final List<CameraDescription> cameras;
 
   const MyApp({super.key, required this.cameras});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _initDeepLinks();
+  }
+
+  @override
+  void dispose() {
+    _linkSubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _initDeepLinks() async {
+    _appLinks = AppLinks();
+
+    // Check initial link
+    try {
+      final Uri? initialLink = await _appLinks.getInitialLink();
+      if (initialLink != null) {
+        _handleDeepLink(initialLink);
+      }
+    } catch (e) {
+      print('Error getting initial link: $e');
+    }
+
+    // Listen for new links
+    _linkSubscription = _appLinks.uriLinkStream.listen((Uri? uri) {
+      if (uri != null) {
+        _handleDeepLink(uri);
+      }
+    }, onError: (err) {
+      print('Error listening to links: $err');
+    });
+  }
+
+  void _handleDeepLink(Uri uri) {
+    print('🔗 Deep link received: $uri');
+    if (uri.host == 'paymob-success' || uri.path.contains('paymob-success')) {
+      // Navigate to success screen
+      navigatorKey.currentState?.pushNamedAndRemoveUntil(
+        AppRoutes.paymobSuccess,
+        (route) => false,
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'Nourish',
       theme: ThemeData(
@@ -81,12 +140,12 @@ class MyApp extends StatelessWidget {
         // Handle camera route with cameras argument
         if (settings.name == AppRoutes.camera) {
           return MaterialPageRoute(
-            builder: (context) => CameraScreen(cameras: cameras),
+            builder: (context) => CameraScreen(cameras: widget.cameras),
           );
         }
         return null;
       },
     );
   }
-  
 }
+

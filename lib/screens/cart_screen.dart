@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:proj/services/auth_service.dart';
 import 'package:proj/services/database_service.dart';
+import 'package:proj/services/paymob_service.dart';
+import 'package:proj/screens/paymob_checkout_screen.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -13,6 +15,7 @@ class CartScreen extends StatefulWidget {
 class _CartScreenState extends State<CartScreen> {
   List<Map<String, dynamic>> _cartItems = [];
   bool _isLoading = true;
+  bool _isProcessingCheckout = false;
   String? _userId;
   double _serviceFee = 0.99;
 
@@ -173,13 +176,61 @@ class _CartScreenState extends State<CartScreen> {
                           width: double.infinity,
                           height: height * 0.065,
                           child: ElevatedButton(
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Checkout feature coming soon!'),
-                                  backgroundColor: Color(0xFF4CAF50),
-                                ),
-                              );
+                            onPressed: _isProcessingCheckout ? null : () async {
+                              setState(() => _isProcessingCheckout = true);
+                              
+                              try {
+                                // 1. Get User Info
+                                final authService = Provider.of<AuthService>(context, listen: false);
+                                final userEmail = await authService.getStoredUserEmail() ?? 'user@nourish.com';
+                                final userName = await authService.getStoredUserName() ?? 'Nourish User';
+                                
+                                // 2. Get Payment URL from Paymob
+                                final paymobService = PaymobService();
+                                final paymentUrl = await paymobService.getPaymentUrl(
+                                  amountInDollars: _total,
+                                  userEmail: userEmail,
+                                  userName: userName,
+                                  userPhone: '+201000000000',
+                                );
+
+                                if (!mounted) return;
+
+                                // 3. Show Payment Screen
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PaymobCheckoutScreen(
+                                      totalAmount: _total,
+                                      cartItems: _cartItems,
+                                    ),
+                                  ),
+                                );
+
+                                // 4. Handle Result
+                                if (result == true && mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('✅ Payment successful! Order placed.'),
+                                      backgroundColor: Color(0xFF4CAF50),
+                                    ),
+                                  );
+                                  await _loadCart();
+                                }
+                              } catch (e) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Checkout failed: $e'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              } finally {
+                                if (mounted) {
+                                  setState(() => _isProcessingCheckout = false);
+                                }
+                              }
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF4CAF50),
@@ -187,14 +238,20 @@ class _CartScreenState extends State<CartScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: const Text(
-                              'Proceed to Checkout',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
+                            child: _isProcessingCheckout
+                                ? const SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                  )
+                                : const Text(
+                                    'Proceed to Checkout',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                           ),
                         ),
 

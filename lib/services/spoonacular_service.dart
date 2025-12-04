@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 class SpoonacularService {
   // Replace with your actual Spoonacular API key
   // Get your API key from: https://spoonacular.com/food-api
-  static const String _apiKey = 'YOUR_SPOONACULAR_API_KEY_HERE';
+  static const String _apiKey = '3f09b6988a024610af31c558ba67af1f';
   static const String _baseURL = 'api.spoonacular.com';
 
   SpoonacularService._();
@@ -21,12 +21,14 @@ class SpoonacularService {
         throw Exception('Image file not found');
       }
 
-      final uri = Uri.https(_baseURL, '/food/images/analyze');
+      // CRITICAL: API key MUST be in URL query parameters (not request.fields)
+      final uri = Uri.https(_baseURL, '/food/images/analyze', {
+        'apiKey': _apiKey,  // ← This is the ONLY correct way
+      });
+      
       final request = http.MultipartRequest('POST', uri);
       
-      // Add API key as query parameter
-      request.fields['apiKey'] = _apiKey;
-      
+      // Add the image file
       request.files.add(
         await http.MultipartFile.fromPath('file', imagePath),
       );

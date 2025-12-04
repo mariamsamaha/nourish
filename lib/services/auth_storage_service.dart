@@ -6,6 +6,7 @@ class AuthStorageService {
   // Keys for storing data
   static const String _keyUserId = 'user_id';
   static const String _keyUserEmail = 'user_email';
+  static const String _keyUserName = 'user_name';
   static const String _keyIsLoggedIn = 'is_logged_in';
   static const String _keyAuthToken = 'auth_token';
 
@@ -13,12 +14,14 @@ class AuthStorageService {
   Future<void> saveUserData({
     required String userId,
     required String email,
+    String? name,
     String? authToken,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     
     await prefs.setString(_keyUserId, userId);
     await prefs.setString(_keyUserEmail, email);
+    if (name != null) await prefs.setString(_keyUserName, name);
     await prefs.setBool(_keyIsLoggedIn, true);
     
     if (authToken != null) {
@@ -36,6 +39,12 @@ class AuthStorageService {
   Future<String?> getUserEmail() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_keyUserEmail);
+  }
+
+  /// Retrieve the stored user name
+  Future<String?> getUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyUserName);
   }
 
   /// Retrieve the stored auth token
@@ -56,6 +65,7 @@ class AuthStorageService {
     
     await prefs.remove(_keyUserId);
     await prefs.remove(_keyUserEmail);
+    await prefs.remove(_keyUserName);
     await prefs.remove(_keyIsLoggedIn);
     await prefs.remove(_keyAuthToken);
   }
@@ -65,6 +75,7 @@ class AuthStorageService {
     return {
       'userId': await getUserId(),
       'email': await getUserEmail(),
+      'name': await getUserName(),
       'authToken': await getAuthToken(),
     };
   }

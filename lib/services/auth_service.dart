@@ -22,6 +22,11 @@ class AuthService {
   Future<String?> getStoredUserEmail() async {
     return await _storage.getUserEmail();
   }
+
+  // Get stored user name from shared preferences
+  Future<String?> getStoredUserName() async {
+    return await _storage.getUserName();
+  }
   
   // Check if user has a valid session stored
   Future<bool> hasStoredSession() async {
