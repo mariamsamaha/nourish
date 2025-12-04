@@ -30,17 +30,26 @@ class _FoodDetectionResultsScreenState
   }
 
   Future<void> _analyzeImage() async {
+    print('\n🚀 [FoodDetection] Starting image analysis');
+    print('📂 [FoodDetection] Image path: ${widget.imagePath}');
+    
     try {
       setState(() {
         _isLoading = true;
         _errorMessage = null;
       });
+      
+      print('⏳ [FoodDetection] Calling Spoonacular API...');
 
       // Analyze the food image
       final result = await SpoonacularService.instance.analyzeFoodImage(
         widget.imagePath,
       );
+      
+      print('✅ [FoodDetection] API call successful, parsing results...');
       final parsed = SpoonacularService.instance.parseAnalysisResult(result);
+      
+      print('📊 [FoodDetection] Parsed results: $parsed');
 
       setState(() {
         _analysisResult = parsed;
@@ -51,7 +60,12 @@ class _FoodDetectionResultsScreenState
         _protein = parsed['protein']?.toDouble() ?? 0.0;
         _isLoading = false;
       });
+      
+      print('✅ [FoodDetection] Analysis complete!');
+      print('🍽️  [FoodDetection] Ingredients: $_detectedIngredients');
+      print('📊 [FoodDetection] Nutrition - Calories: $_calories, Carbs: $_carbs, Fat: $_fat, Protein: $_protein');
     } catch (e) {
+      print('❌ [FoodDetection] Error during analysis: $e');
       setState(() {
         _isLoading = false;
         _errorMessage = e.toString().replaceAll('Exception: ', '');

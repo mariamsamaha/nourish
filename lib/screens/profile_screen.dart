@@ -9,6 +9,7 @@ import 'package:proj/services/firestore_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:convert';
+import 'package:proj/screens/profile_screen_food_modal.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -251,6 +252,149 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _showImageSourceSelection(BuildContext context) async {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 20),
+            const Text(
+              'Scan Your Food',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                'Choose how you want to add your food image',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+            const SizedBox(height: 24),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.camera_alt, color: Colors.blue.shade600),
+              ),
+              title: const Text('Take Photo'),
+              subtitle: const Text('Use camera to scan food'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, AppRoutes.camera);
+              },
+            ),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.photo_library, color: Colors.green.shade600),
+              ),
+              title: const Text('Choose from Gallery'),
+              subtitle: const Text('Pick an existing photo'),
+              onTap: () async {
+                print('\n📸 [Profile] Gallery picker opened');
+                final picker = ImagePicker();
+                try {
+                  print('⏳ [Profile] Waiting for user to select image...');
+                  final XFile? image = await picker.pickImage(
+                    source: ImageSource.gallery,
+                    imageQuality: 85,
+                  );
+                  
+                  // Close the selection modal AFTER we have the image
+                  Navigator.pop(context);
+                  
+                  if (image == null) {
+                    print('❌ [Profile] User cancelled image selection');
+                    return;
+                  }
+                  
+                  print('✅ [Profile] Image selected: ${image.path}');
+                  print('📏 [Profile] Image size: ${await image.length()} bytes');
+                  
+                  // Read image bytes (works on both web and mobile)
+                  print('📖 [Profile] Reading image bytes...');
+                  final bytes = await image.readAsBytes();
+                  print('✅ [Profile] Read ${bytes.length} bytes from image');
+                  
+                  print('🔍 [Profile] Checking if context is mounted...');
+                  if (context.mounted) {
+                    print('✅ [Profile] Context is mounted!');
+                    print('🚀 [Profile] Showing analysis modal...');
+                    try {
+                      await _showFoodAnalysisModal(context, image.path, bytes);
+                      print('✅ [Profile] Modal shown successfully');
+                    } catch (e) {
+                      print('❌ [Profile] Error showing modal: $e');
+                      print('❌ [Profile] Stack trace: ${StackTrace.current}');
+                    }
+                  } else {
+                    print('❌ [Profile] Context is NOT mounted - cannot show modal');
+                  }
+                } catch (e) {
+                  print('❌ [Profile] Error picking image: $e');
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error picking image: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showFoodAnalysisModal(BuildContext context, String imagePath, List<int> imageBytes) async {
+    print('🔬 [Profile] _showFoodAnalysisModal called');
+    print('📂 [Profile] Image path: $imagePath');
+    print('📏 [Profile] Image bytes length: ${imageBytes.length}');
+    
+    try {
+      print('⏳ [Profile] Calling showModalBottomSheet...');
+      await showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        isDismissible: false,
+        builder: (context) {
+          print('🏗️  [Profile] Modal builder called');
+          return FoodAnalysisModal(imagePath: imagePath, imageBytes: imageBytes);
+        },
+      );
+      print('✅ [Profile] Modal dismissed');
+    } catch (e) {
+      print('❌ [Profile] showModalBottomSheet error: $e');
+      rethrow;
+    }
   }
 
   Future<void> _showPersonalInfoModal(BuildContext context) async {
@@ -550,7 +694,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     if (index == 0) {
                       _showFavoritesModal(context);
                     } else if (index == 1) {
-                      Navigator.pushNamed(context, AppRoutes.camera);
+                      _showImageSourceSelection(context);
                     }
                   },
                 ),
