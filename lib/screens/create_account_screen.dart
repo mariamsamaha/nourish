@@ -68,7 +68,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                    IconButton(
                       icon: const Icon(Icons.settings, size: 28, color: Colors.grey),
                       onPressed: () {
-                      Navigator.pushNamed(context, AppRoutes.settings);
+                      Navigator.pushNamed(context, AppRoutes.profile);
                     },
               
                 ),

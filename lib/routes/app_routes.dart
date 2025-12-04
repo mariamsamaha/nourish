@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:proj/screens/welcome_screen.dart';
 import 'package:proj/screens/create_account_screen.dart';
 import 'package:proj/screens/signin_screen.dart';
-import 'package:proj/screens/settings_screen.dart';
 import 'package:proj/screens/food_details_screen.dart';
 import 'package:proj/screens/cart_screen.dart';
 import 'package:proj/screens/home_screen.dart';
@@ -20,7 +19,6 @@ class AppRoutes {
   static const String welcome = '/';
   static const String signup = '/signup';
   static const String signin = '/signin';
-  static const String settings = '/settings';
   static const String foodDetails = '/food_details';
   static const String cart = '/cart';
   static const String home = '/home';
@@ -39,7 +37,6 @@ class AppRoutes {
     signin: (context) => const SignInScreen(),
     
     // Protected routes (auth required)
-    settings: (context) => const AuthGuard(child: SettingsScreen()),
     foodDetails: (context) => const AuthGuard(child: FoodDetailsScreen()),
     cart: (context) => const AuthGuard(child: CartScreen()),
     home: (context) => const AuthGuard(child: HomeScreen()),

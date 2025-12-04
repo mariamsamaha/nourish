@@ -497,13 +497,13 @@ Future<void> _showHelpCenterModal(BuildContext context) async {
                 child: SectionCard(
                   items: [
                     SectionItem(icon: Icons.favorite, label: 'Favorite Restaurants', background: Colors.red.shade50, iconColor: Colors.red.shade600),
-                    SectionItem(icon: Icons.settings, label: 'App Settings', background: Colors.grey.shade50, iconColor: Colors.grey.shade600),
+                    SectionItem(icon: Icons.camera_alt, label: 'Scan Food', background: Colors.green.shade50, iconColor: Colors.green.shade600),
                   ],
                   onTap: (index) {
                     if (index == 0) {
                       _showFavoritesModal(context);
                     } else if (index == 1) {
-                       Navigator.pushNamed(context, AppRoutes.settings);
+                      Navigator.pushNamed(context, AppRoutes.camera);
                     }
                   },
                 ),
