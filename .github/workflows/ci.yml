@@ -42,7 +42,7 @@ jobs:
         run: dart format --output=none --set-exit-if-changed .
 
       - name: Static analysis
-        run: flutter analyze --no-fatal-infos --fatal-warnings
+        run: flutter analyze --no-fatal-infos
 
       - name: Run tests (unit + widget) with coverage
         run: |
