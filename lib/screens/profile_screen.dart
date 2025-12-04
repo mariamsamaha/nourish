@@ -5,6 +5,8 @@ import 'package:proj/routes/app_routes.dart';
 import 'package:proj/services/data_seeder.dart';
 import 'package:proj/services/auth_service.dart';
 import 'package:proj/services/database_service.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -218,6 +220,223 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+  Future<void> _showPersonalInfoModal(BuildContext context) async {
+  final authService = Provider.of<AuthService>(context, listen: false);
+
+  final userEmail = await authService.getStoredUserEmail();
+
+  String? userName;
+  if (userEmail != null) {
+    userName = userEmail.split('@')[0].replaceAll('.', ' ').split(' ').map((word) =>
+      word.isEmpty ? '' : word[0].toUpperCase() + word.substring(1)
+    ).join(' ');
+  }
+
+  if (!mounted) return;
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => DraggableScrollableSheet(
+      initialChildSize: 0.55,
+      minChildSize: 0.35,
+      maxChildSize: 0.85,
+      builder: (_, controller) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 12,
+              spreadRadius: 2,
+              offset: const Offset(0, -2),
+            )
+          ],
+        ),
+        child: Column(
+          children: [
+            // Header with title and close button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Personal Information',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 28),
+                  tooltip: 'Close',
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            Expanded(
+              child: ListView(
+                controller: controller,
+                padding: EdgeInsets.zero,
+                children: [
+                  _buildInfoCard(
+                    context,
+                    icon: Icons.person,
+                    iconColor: Colors.teal,
+                    title: userName ?? 'No name available',
+                    subtitle: 'Name',
+                  ),
+                  const SizedBox(height: 16),
+                  _buildInfoCard(
+                    context,
+                    icon: Icons.email,
+                    iconColor: Colors.deepPurple,
+                    title: userEmail ?? 'No email available',
+                    subtitle: 'Email',
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+// Helper widget to build an info card
+Widget _buildInfoCard(
+  BuildContext context, {
+  required IconData icon,
+  required Color iconColor,
+  required String title,
+  required String subtitle,
+}) {
+  return Card(
+    elevation: 3,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+      child: Row(
+        children: [
+          Icon(icon, color: iconColor, size: 36),
+          const SizedBox(width: 24),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+
+Future<void> _showAboutNourichModal(BuildContext context) async {
+  if (!mounted) return;
+
+  showModalBottomSheet(
+  context: context,
+  isScrollControlled: true,
+  backgroundColor: Colors.transparent,
+  builder: (context) => DraggableScrollableSheet(
+    initialChildSize: 0.6,
+    minChildSize: 0.4,
+    maxChildSize: 0.95,
+    builder: (_, controller) => Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: SingleChildScrollView(
+        controller: controller,
+        child: const AboutNourichSection(),
+      ),
+    ),
+  ),
+);
+
+}
+
+Future<void> _showTermsPrivacyModal(BuildContext context) async {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => DraggableScrollableSheet(
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SingleChildScrollView(
+            controller: scrollController,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: TermsPrivacySection(),
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
+
+Future<void> _showHelpCenterModal(BuildContext context) async {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => DraggableScrollableSheet(
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SingleChildScrollView(
+            controller: scrollController,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: HelpCenterSection(),
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -253,9 +472,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: SectionCard(
                   items: [
                     SectionItem(icon: Icons.person, label: 'Personal Information', background: Colors.blue.shade50, iconColor: Colors.blue.shade600),
-                    SectionItem(icon: Icons.location_on, label: 'Saved Addresses', background: Colors.green.shade50, iconColor: Colors.green.shade600),
-                    SectionItem(icon: Icons.credit_card, label: 'Payment Methods', background: Colors.purple.shade50, iconColor: Colors.purple.shade600),
-                  ],
+                     ],
+                  onTap: (index) {
+                   if (index == 0) {
+                    _showPersonalInfoModal(context);
+                  }
+                },
                 ),
               ),
             ),
@@ -280,6 +502,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onTap: (index) {
                     if (index == 0) {
                       _showFavoritesModal(context);
+                    } else if (index == 1) {
+                       Navigator.pushNamed(context, AppRoutes.settings);
                     }
                   },
                 ),
@@ -304,6 +528,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     SectionItem(icon: null, label: 'About Nourish', background: null, iconColor: null),
                     SectionItem(icon: null, label: 'Terms & Privacy', background: null, iconColor: null),
                   ],
+                  onTap: (index) {
+                    if (index == 1) {
+                      _showAboutNourichModal(context);
+                    } else if (index==2){
+                      _showTermsPrivacyModal(context);
+                    } else {
+                      _showHelpCenterModal(context);
+                    }
+                  },
                 ),
               ),
             ),
@@ -380,6 +613,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
+
 class _ProfileHeader extends StatefulWidget {
   const _ProfileHeader({super.key});
 
@@ -390,6 +624,9 @@ class _ProfileHeader extends StatefulWidget {
 class _ProfileHeaderState extends State<_ProfileHeader> {
   String _userEmail = 'Loading...';
   String _userName = 'User';
+  File? _profileImageFile;
+
+  final _picker = ImagePicker();
 
   @override
   void initState() {
@@ -400,24 +637,189 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
   Future<void> _loadUserData() async {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
-      
-      // Get user email from shared preferences
+
       final storedEmail = await authService.getStoredUserEmail();
-      
+      final storedName = storedEmail != null
+          ? storedEmail.split('@')[0].replaceAll('.', ' ').split(' ').map((word) =>
+              word.isEmpty ? '' : word[0].toUpperCase() + word.substring(1)).join(' ')
+          : 'User';
+
       setState(() {
         _userEmail = storedEmail ?? 'No email found';
-        // Extract name from email (first part before @)
-        if (storedEmail != null) {
-          _userName = storedEmail.split('@')[0].replaceAll('.', ' ').split(' ').map((word) => 
-            word.isEmpty ? '' : word[0].toUpperCase() + word.substring(1)
-          ).join(' ');
-        }
+        _userName = storedName;
       });
     } catch (e) {
       setState(() {
         _userEmail = 'Error loading email';
         _userName = 'User';
       });
+    }
+  }
+
+  Future<void> _showEditProfileModal() async {
+    final nameController = TextEditingController(text: _userName);
+    final emailController = TextEditingController(text: _userEmail);
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        maxChildSize: 0.95,
+        minChildSize: 0.5,
+        builder: (_, controller) => Container(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: ListView(
+            controller: controller,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Edit Profile',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Profile Image with edit button
+              Center(
+                child: Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 50,
+                      backgroundColor: Colors.grey.shade200,
+                      backgroundImage:
+                          _profileImageFile != null ? FileImage(_profileImageFile!) : null,
+                      child: _profileImageFile == null ? const Icon(Icons.person, size: 50) : null,
+                    ),
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: InkWell(
+                        onTap: _showImageSourceOptions,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade600,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                          child: const Icon(Icons.edit, color: Colors.white, size: 20),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Name input
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Name',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Email input
+              TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              ElevatedButton(
+                onPressed: () async {
+                  final newName = nameController.text.trim();
+                  final newEmail = emailController.text.trim();
+
+                  // TODO: Implementing the saving logic 
+
+                  setState(() {
+                    _userName = newName;
+                    _userEmail = newEmail;
+                  });
+
+                  Navigator.pop(context);
+                },
+                child: const Text('Save Changes'),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showImageSourceOptions() async {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Take a selfie'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Choose from gallery'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final pickedFile = await _picker.pickImage(source: source, imageQuality: 85);
+
+      if (pickedFile != null) {
+        setState(() {
+          _profileImageFile = File(pickedFile.path);
+        });
+
+        
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to pick image: $e')),
+      );
     }
   }
 
@@ -437,53 +839,49 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                Stack(
                   children: [
-                    Stack(
-                      children: [
-                        CircleAvatar(
-                          radius: 36,
-                          backgroundColor: Colors.white,
-                          child: Text('👤', style: TextStyle(fontSize: 28)),
-                        ),
-                        Positioned(
-                          right: -4,
-                          bottom: -4,
-                          child: InkWell(
-                            onTap: () {},
-                            child: Container(
-                              width: 30,
-                              height: 30,
-                              decoration: BoxDecoration(
-                                color: Colors.green.shade500,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: Colors.white, width: 2),
-                                boxShadow: const [BoxShadow(blurRadius: 6, color: Colors.black12, offset: Offset(0,2))],
-                              ),
-                              child: const Icon(Icons.edit, color: Colors.white, size: 16),
-                            ),
-                          ),
-                        ),
-                      ],
+                    CircleAvatar(
+                      radius: 36,
+                      backgroundColor: Colors.white,
+                      backgroundImage: _profileImageFile != null ? FileImage(_profileImageFile!) : null,
+                      child: _profileImageFile == null
+                          ? const Text('👤', style: TextStyle(fontSize: 28))
+                          : null,
                     ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(_userName, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 4),
-                        Text(_userEmail, style: TextStyle(color: Colors.green.shade100, fontSize: 13)),
-                      ],
+                    Positioned(
+                      right: -4,
+                      bottom: -4,
+                      child: InkWell(
+                        onTap: _showEditProfileModal,
+                        child: Container(
+                          width: 30,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade500,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.white, width: 2),
+                            boxShadow: const [BoxShadow(blurRadius: 6, color: Colors.black12, offset: Offset(0, 2))],
+                          ),
+                          child: const Icon(Icons.edit, color: Colors.white, size: 16),
+                        ),
+                      ),
                     ),
                   ],
                 ),
-                
-                const SizedBox(width: 8),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_userName, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 4),
+                    Text(_userEmail, style: TextStyle(color: Colors.green.shade100, fontSize: 13)),
+                  ],
+                ),
               ],
             ),
+            
             const SizedBox(height: 16),
 
             Row(
@@ -499,6 +897,7 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
     );
   }
 }
+
 
 class StatTile extends StatelessWidget {
   final String value;
@@ -531,7 +930,7 @@ class StatTile extends StatelessWidget {
 
 class SectionCard extends StatelessWidget {
   final List<SectionItem> items;
-  final Function(int index)? onTap; // Add onTap callback
+  final Function(int index)? onTap; 
 
   const SectionCard({super.key, required this.items, this.onTap});
 
@@ -626,5 +1025,259 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(title, style: TextStyle(color: Colors.grey[900], fontSize: 16, fontWeight: FontWeight.w600));
+  }
+}
+
+class AboutNourichSection extends StatelessWidget {
+  const AboutNourichSection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Card(
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shadowColor: Colors.greenAccent.withOpacity(0.3),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.recycling_rounded, color: Colors.green.shade700, size: 28),
+                  const SizedBox(width: 12),
+                  Text(
+                    'About Nourich',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: Colors.green.shade800,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Our Mission ',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.green.shade700,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                ' Nourich is dedicated to manage food waste by connecting users with restaurants offering surplus food at reduced prices. Instead of letting perfectly good food go to waste, we provide an eco-friendly and cost-effective way to enjoy delicious meals.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  height: 1.5,
+                  fontSize: 15,
+                  color: Colors.grey[800],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Our Vision ',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.green.shade700,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                ' We envision a world where food waste is minimized, and every meal has a purpose. Through our platform, users can also donate excess food to charities and food banks, fostering a community of generosity and sustainability.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  height: 1.5,
+                  fontSize: 15,
+                  color: Colors.grey[800],
+                ),
+              ),
+              
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+class HelpCenterSection extends StatefulWidget {
+  const HelpCenterSection({super.key});
+
+  @override
+  State<HelpCenterSection> createState() => _HelpCenterSectionState();
+}
+
+class _HelpCenterSectionState extends State<HelpCenterSection> {
+  final List<_FaqItem> _faqItems = [
+    _FaqItem(
+      question: 'How do I place an order?',
+      answer: 'Browse restaurants, select your favorite meals, and follow the checkout process to place an order.',
+    ),
+    _FaqItem(
+      question: 'How do I add favorite restaurants?',
+      answer: 'Tap the heart icon on any restaurant’s page to add it to your favorites.',
+    ),
+    _FaqItem(
+      question: 'Can I donate food through Nourich?',
+      answer: 'Yes! You can donate leftover food to local charities and food banks using our donation feature.',
+    ),
+    _FaqItem(
+      question: 'How do I view my account details?',
+      answer: 'Go to Personal Information in your profile to view your name and email.',
+    ),
+    _FaqItem(
+      question: 'What payment methods are accepted?',
+      answer: 'We accept credit cards, debit cards, and some mobile payment options.',
+    ),
+  ];
+
+  final Set<int> _expandedIndices = {};
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Card(
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+          child: ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _faqItems.length,
+            itemBuilder: (context, index) {
+              final isExpanded = _expandedIndices.contains(index);
+              final faq = _faqItems[index];
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  InkWell(
+                    onTap: () {
+                      setState(() {
+                        if (isExpanded) {
+                          _expandedIndices.remove(index);
+                        } else {
+                          _expandedIndices.add(index);
+                        }
+                      });
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              faq.question,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: Colors.green.shade700,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            isExpanded ? Icons.expand_less : Icons.expand_more,
+                            color: Colors.green.shade700,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (isExpanded)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 16, right: 8, bottom: 12),
+                      child: Text(
+                        faq.answer,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey[800],
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  Divider(color: Colors.grey.shade300),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FaqItem {
+  final String question;
+  final String answer;
+  _FaqItem({required this.question, required this.answer});
+}
+
+class TermsPrivacySection extends StatelessWidget {
+  const TermsPrivacySection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Card(
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Terms & Privacy',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    color: Colors.green.shade800,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                Text(
+                  'Terms of Use',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.green.shade700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'By using Nourich, you agree to our terms and conditions. We provide the platform to connect users with restaurants to reduce food waste. Users must be responsible and respectful while using the app.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    height: 1.5,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                Text(
+                  'Privacy Policy',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.green.shade700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Nourich respects your privacy. We collect only necessary information to improve your experience and never share your personal data with third parties without your consent.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    height: 1.5,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
