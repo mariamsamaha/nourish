@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:proj/routes/app_routes.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -55,6 +56,14 @@ class SettingsScreen extends StatelessWidget {
                 icon: Icons.restaurant_menu,
                 onTap: () {
                   _navigateToScreen(context, "Dietary Preferences");
+                },
+              ),
+              _buildListTile(
+                context,
+                title: "Scan Food",
+                icon: Icons.camera_alt,
+                onTap: () {
+                  Navigator.pushNamed(context, AppRoutes.camera);
                 },
               ),
               _buildListTile(

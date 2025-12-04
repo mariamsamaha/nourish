@@ -12,6 +12,8 @@ import 'package:proj/screens/charity_screen.dart';
 import 'package:proj/screens/profile_screen.dart';
 import 'package:proj/screens/welcome_screen.dart';
 import 'package:proj/screens/subscription_screen.dart';
+import 'package:proj/screens/camera_screen.dart';
+import 'package:proj/screens/food_detection_results_screen.dart';
 import 'package:proj/middleware/auth_guard.dart';
 
 class AppRoutes {
@@ -27,6 +29,8 @@ class AppRoutes {
   static const String charity = '/charity';
   static const String profile = '/profile';
   static const String subscription = '/subscription';
+  static const String camera = '/camera';
+  static const String foodDetectionResults = '/food_detection_results';
   
   static Map<String, WidgetBuilder> routes = {
     // Public routes (no auth required)

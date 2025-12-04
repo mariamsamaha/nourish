@@ -49,5 +49,11 @@
 	<string>Nourish needs your location to show nearby restaurants and calculate distances.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>Nourish needs your location to show nearby restaurants and calculate distances.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Nourish needs access to your camera to capture photos of food for calorie detection and meal tracking.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Nourish needs access to your microphone for video recording when capturing food photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Nourish needs access to your photo library to select food images for calorie detection.</string>
 </dict>
 </plist>
