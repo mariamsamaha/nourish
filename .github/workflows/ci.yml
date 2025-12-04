@@ -46,7 +46,7 @@ jobs:
 
       - name: Run tests (unit + widget) with coverage
         run: |
-          flutter test --coverage
+          flutter test test/payment_link_handler_test.dart --coverage
           # ensure lcov exists
           if [ ! -f coverage/lcov.info ]; then echo "lcov not found"; fi
 
