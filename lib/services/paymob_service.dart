@@ -117,27 +117,27 @@ class PaymobService {
         print('✅ Payment key obtained');
         return data['token'];
       }
-      
+
       // If 400 and we sent a redirect URL, retry without it
       if (response.statusCode == 400 && redirectionUrl != null) {
         print('⚠️  400 error with redirect URL, retrying without it...');
         body.remove('redirection_url');
-        
+
         final retryResponse = await http.post(
           Uri.parse('$_baseUrl/acceptance/payment_keys'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode(body),
         );
-        
+
         print('🔑 Retry response: ${retryResponse.statusCode}');
-        
+
         if (retryResponse.statusCode == 201) {
           final data = jsonDecode(retryResponse.body);
           print('✅ Payment key obtained (without redirect URL)');
           return data['token'];
         }
       }
-      
+
       throw Exception('Failed to get payment key: ${response.body}');
     } catch (e) {
       print('❌ Payment key error: $e');

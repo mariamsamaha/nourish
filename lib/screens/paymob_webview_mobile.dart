@@ -40,22 +40,25 @@ class _PaymobWebViewState extends State<PaymobWebView> {
           onNavigationRequest: (NavigationRequest request) {
             print('🧭 Navigation request: ${request.url}');
             _checkPaymentStatus(request.url);
-            
-            if (request.url.contains('success') || 
+
+            if (request.url.contains('success') ||
                 request.url.contains('callback') ||
                 request.url.contains('paymob-success')) {
               print('✅ Detected success/callback URL - completing payment');
               _triggerSuccess();
             }
-            
+
             return NavigationDecision.navigate;
           },
           onWebResourceError: (WebResourceError error) {
-            print('⚠️ WebView error: ${error.description} (code: ${error.errorCode})');
-            
-            
+            print(
+              '⚠️ WebView error: ${error.description} (code: ${error.errorCode})',
+            );
+
             if (error.errorCode != null && error.errorCode! >= 400) {
-              print('🚨 HTTP Error ${error.errorCode} detected - treating as successful payment for presentation');
+              print(
+                '🚨 HTTP Error ${error.errorCode} detected - treating as successful payment for presentation',
+              );
               _triggerSuccess();
             }
           },
@@ -71,13 +74,15 @@ class _PaymobWebViewState extends State<PaymobWebView> {
         url.contains('paymob-success')) {
       print('✅ Explicit success detected in URL');
       _triggerSuccess();
-    } 
+    }
     // FOR PRESENTATION: Treat decline/failure as success too
     else if (url.contains('success=false') ||
         url.contains('txn_response_code=DECLINED') ||
         url.contains('decline') ||
         url.contains('fail')) {
-      print('⚠️ Payment declined/failed but treating as success for presentation');
+      print(
+        '⚠️ Payment declined/failed but treating as success for presentation',
+      );
       _triggerSuccess();
     }
   }
@@ -92,10 +97,12 @@ class _PaymobWebViewState extends State<PaymobWebView> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope( 
+    return WillPopScope(
       onWillPop: () async {
         if (_pageLoadCount > 0) {
-          print('⬅️ Back button pressed after viewing payment - treating as success');
+          print(
+            '⬅️ Back button pressed after viewing payment - treating as success',
+          );
           _triggerSuccess();
         }
         return true;
