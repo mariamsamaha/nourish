@@ -51,7 +51,8 @@ class DataSeeder {
         name: 'Al Ahram Restaurant',
         rating: 4.9,
         reviews: 512,
-        imageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800',
+        imageUrl:
+            'https://images.unsplash.com/photo-1544025162-d76694265947?w=800',
         address: 'Al Haram St, Giza, Egypt',
         tags: ['Egyptian', 'Grilled', 'Traditional'],
         latitude: 29.9792,
@@ -106,7 +107,8 @@ class DataSeeder {
         name: 'Lucille\'s Maadi',
         rating: 4.8,
         reviews: 445,
-        imageUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800',
+        imageUrl:
+            'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800',
         address: 'Road 9, Maadi, Cairo, Egypt',
         tags: ['American', 'Burgers', 'Breakfast'],
         latitude: 29.9606,
@@ -119,7 +121,8 @@ class DataSeeder {
         name: 'Fish Market Alexandria',
         rating: 4.9,
         reviews: 892,
-        imageUrl: 'https://images.unsplash.com/photo-1559496417-e7f25cb247f6?w=800',
+        imageUrl:
+            'https://images.unsplash.com/photo-1559496417-e7f25cb247f6?w=800',
         address: 'Corniche, Bahary, Alexandria, Egypt',
         tags: ['Seafood', 'Fish', 'Mediterranean'],
         latitude: 31.2001,
@@ -259,7 +262,8 @@ class DataSeeder {
       Charity(
         id: 'c2',
         name: 'Resala Charity',
-        description: 'Providing food, shelter, and support to underprivileged communities in Egypt.',
+        description:
+            'Providing food, shelter, and support to underprivileged communities in Egypt.',
         imageUrl:
             'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=800',
         impactGoal: 30000,
@@ -268,7 +272,8 @@ class DataSeeder {
       Charity(
         id: 'c3',
         name: 'Misr El Kheir Foundation',
-        description: 'Comprehensive development programs including food security for Egyptian families.',
+        description:
+            'Comprehensive development programs including food security for Egyptian families.',
         imageUrl:
             'https://images.unsplash.com/photo-1509099836639-18ba1795216d?w=800',
         impactGoal: 100000,

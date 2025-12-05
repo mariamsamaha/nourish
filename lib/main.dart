@@ -26,7 +26,7 @@ Future<void> main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     print('✅ Firebase initialized successfully');
-    
+
     // Auto-seed database with Egyptian data
     try {
       await DataSeeder.seed();

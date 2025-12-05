@@ -16,21 +16,23 @@ class SpoonacularService {
   Future<Map<String, dynamic>> analyzeFoodImage(String imagePath) async {
     print('🔍 [Spoonacular] Starting food image analysis');
     print('📂 [Spoonacular] Image path: $imagePath');
-    
+
     try {
       final imageFile = File(imagePath);
       if (!await imageFile.exists()) {
         print('❌ [Spoonacular] Image file not found at path: $imagePath');
         throw Exception('Image file not found');
       }
-      
-      print('✅ [Spoonacular] Image file exists, size: ${await imageFile.length()} bytes');
+
+      print(
+        '✅ [Spoonacular] Image file exists, size: ${await imageFile.length()} bytes',
+      );
 
       // CRITICAL: API key MUST be in URL query parameters (not request.fields)
       final uri = Uri.https(_baseURL, '/food/images/analyze', {
         'apiKey': _apiKey, // ← This is the ONLY correct way
       });
-      
+
       print('🌐 [Spoonacular] API URL: $uri');
 
       final request = http.MultipartRequest('POST', uri);
@@ -42,7 +44,7 @@ class SpoonacularService {
       // Send request
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
-      
+
       print('📥 [Spoonacular] Response Status Code: ${response.statusCode}');
       print('📥 [Spoonacular] Response Body: ${response.body}');
 
@@ -52,8 +54,12 @@ class SpoonacularService {
         print('📊 [Spoonacular] Response data: $data');
         return data;
       } else {
-        print('❌ [Spoonacular] API Error ${response.statusCode}: ${response.body}');
-        throw Exception('Failed to analyze image: ${response.statusCode} - ${response.body}');
+        print(
+          '❌ [Spoonacular] API Error ${response.statusCode}: ${response.body}',
+        );
+        throw Exception(
+          'Failed to analyze image: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e) {
       print('❌ [Spoonacular] Exception: $e');
@@ -68,28 +74,32 @@ class SpoonacularService {
   ) async {
     print('🔍 [Spoonacular] Starting food image analysis (bytes)');
     print('📏 [Spoonacular] Image bytes length: ${imageBytes.length}');
-    
+
     try {
       final uri = Uri.https(_baseURL, '/food/images/analyze', {
         'apiKey': _apiKey,
       });
-      
+
       print('🌐 [Spoonacular] API URL: $uri');
 
       final request = http.MultipartRequest('POST', uri);
 
       // Add the image from bytes
-      request.files.add(http.MultipartFile.fromBytes(
-        'file',
-        imageBytes,
-        filename: filename.split('/').last,
-      ));
-      print('📤 [Spoonacular] Sending ${imageBytes.length} bytes to Spoonacular API...');
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'file',
+          imageBytes,
+          filename: filename.split('/').last,
+        ),
+      );
+      print(
+        '📤 [Spoonacular] Sending ${imageBytes.length} bytes to Spoonacular API...',
+      );
 
       // Send request
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
-      
+
       print('📥 [Spoonacular] Response Status Code: ${response.statusCode}');
       print('📥 [Spoonacular] Response Body: ${response.body}');
 
@@ -99,8 +109,12 @@ class SpoonacularService {
         print('📊 [Spoonacular] Response data: $data');
         return data;
       } else {
-        print('❌ [Spoonacular] API Error ${response.statusCode}: ${response.body}');
-        throw Exception('Failed to analyze image: ${response.statusCode} - ${response.body}');
+        print(
+          '❌ [Spoonacular] API Error ${response.statusCode}: ${response.body}',
+        );
+        throw Exception(
+          'Failed to analyze image: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e) {
       print('❌ [Spoonacular] Exception: $e');
@@ -175,12 +189,12 @@ class SpoonacularService {
   Map<String, dynamic> parseAnalysisResult(Map<String, dynamic> analysisData) {
     print('🔬 [Spoonacular] Parsing analysis result...');
     print('📊 [Spoonacular] Raw analysis data: $analysisData');
-    
+
     try {
       final categories = analysisData['category'] ?? {};
       final nutrition = analysisData['nutrition'] ?? {};
       final recipes = analysisData['recipes'] ?? [];
-      
+
       print('🏷️  [Spoonacular] Categories: $categories');
       print('🍽️  [Spoonacular] Nutrition: $nutrition');
       print('📖 [Spoonacular] Recipes count: ${recipes.length}');
@@ -197,8 +211,10 @@ class SpoonacularService {
       final carbs = nutrition['carbs']?['value']?.toDouble() ?? 0.0;
       final fat = nutrition['fat']?['value']?.toDouble() ?? 0.0;
       final protein = nutrition['protein']?['value']?.toDouble() ?? 0.0;
-      
-      print('📊 [Spoonacular] Nutrition - Calories: $calories, Carbs: $carbs, Fat: $fat, Protein: $protein');
+
+      print(
+        '📊 [Spoonacular] Nutrition - Calories: $calories, Carbs: $carbs, Fat: $fat, Protein: $protein',
+      );
 
       final result = {
         'ingredients': ingredients,
@@ -209,7 +225,7 @@ class SpoonacularService {
         'recipes': recipes,
         'category': categories,
       };
-      
+
       print('✅ [Spoonacular] Parsed result: $result');
       return result;
     } catch (e) {

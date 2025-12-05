@@ -415,9 +415,9 @@ class DatabaseService {
           .collection('charities')
           .doc(charityId)
           .set({
-        'charity_id': charityId,
-        'created_at': FieldValue.serverTimestamp(),
-      });
+            'charity_id': charityId,
+            'created_at': FieldValue.serverTimestamp(),
+          });
     } else {
       // MOBILE: Save to SQLite
       final db = await database;
@@ -469,7 +469,7 @@ class DatabaseService {
           .doc(userId)
           .collection('charities')
           .get();
-      
+
       return snapshot.docs.map((doc) => doc.id).toList();
     } else {
       // MOBILE: Load from SQLite
@@ -499,7 +499,7 @@ class DatabaseService {
           .collection('charities')
           .doc(charityId)
           .get();
-      
+
       return doc.exists;
     } else {
       // MOBILE: Check in SQLite

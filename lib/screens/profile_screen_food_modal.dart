@@ -62,7 +62,9 @@ class _FoodAnalysisModalState extends State<FoodAnalysisModal> {
 
       print('✅ [FoodAnalysisModal] Analysis complete!');
       print('🍽️  [FoodAnalysisModal] Ingredients: $_detectedIngredients');
-      print('📊 [FoodAnalysisModal] Nutrition - Calories: $_calories, Carbs: $_carbs, Fat: $_fat, Protein: $_protein');
+      print(
+        '📊 [FoodAnalysisModal] Nutrition - Calories: $_calories, Carbs: $_carbs, Fat: $_fat, Protein: $_protein',
+      );
     } catch (e) {
       print('❌ [FoodAnalysisModal] Error during analysis: $e');
       setState(() {
@@ -120,135 +122,169 @@ class _FoodAnalysisModalState extends State<FoodAnalysisModal> {
                       ),
                     )
                   : _errorMessage != null
-                      ? Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(24.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                                const SizedBox(height: 16),
-                                const Text(
-                                  'Error analyzing image',
-                                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  _errorMessage!,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(color: Colors.grey[600]),
-                                ),
-                                const SizedBox(height: 24),
-                                ElevatedButton.icon(
-                                  onPressed: _analyzeImage,
-                                  icon: const Icon(Icons.refresh),
-                                  label: const Text('Try Again'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF4CAF50),
-                                    foregroundColor: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      : ListView(
-                          controller: controller,
-                          padding: const EdgeInsets.all(16),
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // Image
-                            Container(
-                              height: 200,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.memory(widget.imageBytes as Uint8List, fit: BoxFit.cover),
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-
-                            // Detected Ingredients
-                            Card(
-                              elevation: 2,
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Detected Ingredients',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF1B5E20),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    if (_detectedIngredients.isEmpty)
-                                      const Text(
-                                        'No ingredients detected. Try a clearer photo.',
-                                        style: TextStyle(color: Colors.grey),
-                                      )
-                                    else
-                                      Wrap(
-                                        spacing: 8,
-                                        runSpacing: 8,
-                                        children: _detectedIngredients.map((ingredient) {
-                                          return Chip(
-                                            label: Text(ingredient),
-                                            backgroundColor: const Color(0xFFE8F5E9),
-                                            labelStyle: const TextStyle(
-                                              color: Color(0xFF2E7D32),
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          );
-                                        }).toList(),
-                                      ),
-                                  ],
-                                ),
-                              ),
+                            const Icon(
+                              Icons.error_outline,
+                              size: 64,
+                              color: Colors.red,
                             ),
                             const SizedBox(height: 16),
-
-                            // Nutrition
-                            Card(
-                              elevation: 2,
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Nutrition Information',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF1B5E20),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    _buildNutritionRow('Calories', _calories.toStringAsFixed(0), Icons.local_fire_department, Colors.orange),
-                                    const Divider(),
-                                    _buildNutritionRow('Protein', '${_protein.toStringAsFixed(1)} g', Icons.fitness_center, Colors.blue),
-                                    const Divider(),
-                                    _buildNutritionRow('Carbs', '${_carbs.toStringAsFixed(1)} g', Icons.breakfast_dining, Colors.amber),
-                                    const Divider(),
-                                    _buildNutritionRow('Fat', '${_fat.toStringAsFixed(1)} g', Icons.water_drop, Colors.red),
-                                  ],
-                                ),
+                            const Text(
+                              'Error analyzing image',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _errorMessage!,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.grey[600]),
+                            ),
+                            const SizedBox(height: 24),
+                            ElevatedButton.icon(
+                              onPressed: _analyzeImage,
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Try Again'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF4CAF50),
+                                foregroundColor: Colors.white,
                               ),
                             ),
                           ],
                         ),
+                      ),
+                    )
+                  : ListView(
+                      controller: controller,
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        // Image
+                        Container(
+                          height: 200,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.memory(
+                              widget.imageBytes as Uint8List,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Detected Ingredients
+                        Card(
+                          elevation: 2,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Detected Ingredients',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF1B5E20),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                if (_detectedIngredients.isEmpty)
+                                  const Text(
+                                    'No ingredients detected. Try a clearer photo.',
+                                    style: TextStyle(color: Colors.grey),
+                                  )
+                                else
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: _detectedIngredients.map((
+                                      ingredient,
+                                    ) {
+                                      return Chip(
+                                        label: Text(ingredient),
+                                        backgroundColor: const Color(
+                                          0xFFE8F5E9,
+                                        ),
+                                        labelStyle: const TextStyle(
+                                          color: Color(0xFF2E7D32),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Nutrition
+                        Card(
+                          elevation: 2,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Nutrition Information',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF1B5E20),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                _buildNutritionRow(
+                                  'Calories',
+                                  _calories.toStringAsFixed(0),
+                                  Icons.local_fire_department,
+                                  Colors.orange,
+                                ),
+                                const Divider(),
+                                _buildNutritionRow(
+                                  'Protein',
+                                  '${_protein.toStringAsFixed(1)} g',
+                                  Icons.fitness_center,
+                                  Colors.blue,
+                                ),
+                                const Divider(),
+                                _buildNutritionRow(
+                                  'Carbs',
+                                  '${_carbs.toStringAsFixed(1)} g',
+                                  Icons.breakfast_dining,
+                                  Colors.amber,
+                                ),
+                                const Divider(),
+                                _buildNutritionRow(
+                                  'Fat',
+                                  '${_fat.toStringAsFixed(1)} g',
+                                  Icons.water_drop,
+                                  Colors.red,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
             ),
           ],
         ),
@@ -256,7 +292,12 @@ class _FoodAnalysisModalState extends State<FoodAnalysisModal> {
     );
   }
 
-  Widget _buildNutritionRow(String label, String value, IconData icon, Color color) {
+  Widget _buildNutritionRow(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -264,11 +305,18 @@ class _FoodAnalysisModalState extends State<FoodAnalysisModal> {
           Icon(icon, color: color, size: 24),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
           ),
           Text(
             value,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
         ],
       ),

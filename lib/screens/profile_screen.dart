@@ -38,32 +38,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<void> _seedDatabase(BuildContext context) async {
-    try {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('🌱 Seeding database... Please wait.')),
-      );
-
-      await DataSeeder.seed();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              '✅ Database seeded successfully! Restart app to see changes.',
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('❌ Error seeding database: $e')));
-      }
-    }
-  }
-
   Future<void> _showFavoritesModal(BuildContext context) async {
     final authService = Provider.of<AuthService>(context, listen: false);
     final userId = await authService.getStoredUserId();
@@ -317,23 +291,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     source: ImageSource.gallery,
                     imageQuality: 85,
                   );
-                  
+
                   // Close the selection modal AFTER we have the image
                   Navigator.pop(context);
-                  
+
                   if (image == null) {
                     print('❌ [Profile] User cancelled image selection');
                     return;
                   }
-                  
+
                   print('✅ [Profile] Image selected: ${image.path}');
-                  print('📏 [Profile] Image size: ${await image.length()} bytes');
-                  
+                  print(
+                    '📏 [Profile] Image size: ${await image.length()} bytes',
+                  );
+
                   // Read image bytes (works on both web and mobile)
                   print('📖 [Profile] Reading image bytes...');
                   final bytes = await image.readAsBytes();
                   print('✅ [Profile] Read ${bytes.length} bytes from image');
-                  
+
                   print('🔍 [Profile] Checking if context is mounted...');
                   if (context.mounted) {
                     print('✅ [Profile] Context is mounted!');
@@ -346,7 +322,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       print('❌ [Profile] Stack trace: ${StackTrace.current}');
                     }
                   } else {
-                    print('❌ [Profile] Context is NOT mounted - cannot show modal');
+                    print(
+                      '❌ [Profile] Context is NOT mounted - cannot show modal',
+                    );
                   }
                 } catch (e) {
                   print('❌ [Profile] Error picking image: $e');
@@ -373,11 +351,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Future<void> _showFoodAnalysisModal(BuildContext context, String imagePath, List<int> imageBytes) async {
+  Future<void> _showFoodAnalysisModal(
+    BuildContext context,
+    String imagePath,
+    List<int> imageBytes,
+  ) async {
     print('🔬 [Profile] _showFoodAnalysisModal called');
     print('📂 [Profile] Image path: $imagePath');
     print('📏 [Profile] Image bytes length: ${imageBytes.length}');
-    
+
     try {
       print('⏳ [Profile] Calling showModalBottomSheet...');
       await showModalBottomSheet(
@@ -387,7 +369,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         isDismissible: false,
         builder: (context) {
           print('🏗️  [Profile] Modal builder called');
-          return FoodAnalysisModal(imagePath: imagePath, imageBytes: imageBytes);
+          return FoodAnalysisModal(
+            imagePath: imagePath,
+            imageBytes: imageBytes,
+          );
         },
       );
       print('✅ [Profile] Modal dismissed');
@@ -747,31 +732,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
 
             SliverToBoxAdapter(child: const SizedBox(height: 20)),
-
-            // Developer Tools
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const _SectionTitle(title: 'Developer Tools'),
-                    const SizedBox(height: 8),
-                    SectionCard(
-                      items: [
-                        SectionItem(
-                          icon: Icons.cloud_upload,
-                          label: 'Seed Database',
-                          background: Colors.orange.shade50,
-                          iconColor: Colors.orange.shade600,
-                        ),
-                      ],
-                      onTap: (index) => _seedDatabase(context),
-                    ),
-                  ],
-                ),
-              ),
-            ),
 
             SliverToBoxAdapter(child: const SizedBox(height: 20)),
 
