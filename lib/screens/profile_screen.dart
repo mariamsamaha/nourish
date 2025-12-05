@@ -669,16 +669,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       iconColor: Colors.red.shade600,
                     ),
                     SectionItem(
+                      icon: Icons.smart_toy_outlined,
+                      label: 'AI Chat Support',
+                      background: Colors.green.shade50,
+                      iconColor: Colors.green.shade700,
+                    ),
+                    SectionItem(
                       icon: Icons.camera_alt,
                       label: 'Scan Food',
-                      background: Colors.green.shade50,
-                      iconColor: Colors.green.shade600,
+                      background: Colors.purple.shade50,
+                      iconColor: Colors.purple.shade600,
                     ),
                   ],
                   onTap: (index) {
                     if (index == 0) {
                       _showFavoritesModal(context);
                     } else if (index == 1) {
+                      // Navigate to AI Chat Support
+                      Navigator.pushNamed(context, AppRoutes.chatSupport);
+                    } else if (index == 2) {
                       _showImageSourceSelection(context);
                     }
                   },
