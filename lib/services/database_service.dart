@@ -407,17 +407,19 @@ class DatabaseService {
     required String charityId,
   }) async {
     if (kIsWeb) {
-      // Web implementation
-      final prefsData = await _loadCharityPrefsFromPrefs();
-      final userCharities = prefsData[userId] ?? [];
-
-      if (!userCharities.contains(charityId)) {
-        userCharities.add(charityId);
-        prefsData[userId] = userCharities;
-        await _saveCharityPrefsToPrefs(prefsData);
-      }
+      // WEB: Save to Firestore (persists across browsers)
+      final firestore = FirebaseFirestore.instance;
+      await firestore
+          .collection('userCharities')
+          .doc(userId)
+          .collection('charities')
+          .doc(charityId)
+          .set({
+        'charity_id': charityId,
+        'created_at': FieldValue.serverTimestamp(),
+      });
     } else {
-      // Mobile/Desktop implementation
+      // MOBILE: Save to SQLite
       final db = await database;
 
       try {
@@ -438,15 +440,16 @@ class DatabaseService {
     required String charityId,
   }) async {
     if (kIsWeb) {
-      // Web implementation
-      final prefsData = await _loadCharityPrefsFromPrefs();
-      final userCharities = prefsData[userId] ?? [];
-
-      userCharities.remove(charityId);
-      prefsData[userId] = userCharities;
-      await _saveCharityPrefsToPrefs(prefsData);
+      // WEB: Remove from Firestore
+      final firestore = FirebaseFirestore.instance;
+      await firestore
+          .collection('userCharities')
+          .doc(userId)
+          .collection('charities')
+          .doc(charityId)
+          .delete();
     } else {
-      // Mobile/Desktop implementation
+      // MOBILE: Remove from SQLite
       final db = await database;
       await db.delete(
         'user_charity_preferences',
@@ -459,11 +462,17 @@ class DatabaseService {
   /// Get all charities supported by a user
   Future<List<String>> getSupportedCharities(String userId) async {
     if (kIsWeb) {
-      // Web implementation
-      final prefsData = await _loadCharityPrefsFromPrefs();
-      return prefsData[userId] ?? [];
+      // WEB: Load from Firestore
+      final firestore = FirebaseFirestore.instance;
+      final snapshot = await firestore
+          .collection('userCharities')
+          .doc(userId)
+          .collection('charities')
+          .get();
+      
+      return snapshot.docs.map((doc) => doc.id).toList();
     } else {
-      // Mobile/Desktop implementation
+      // MOBILE: Load from SQLite
       final db = await database;
       final results = await db.query(
         'user_charity_preferences',
@@ -482,12 +491,18 @@ class DatabaseService {
     required String charityId,
   }) async {
     if (kIsWeb) {
-      // Web implementation
-      final prefsData = await _loadCharityPrefsFromPrefs();
-      final userCharities = prefsData[userId] ?? [];
-      return userCharities.contains(charityId);
+      // WEB: Check in Firestore
+      final firestore = FirebaseFirestore.instance;
+      final doc = await firestore
+          .collection('userCharities')
+          .doc(userId)
+          .collection('charities')
+          .doc(charityId)
+          .get();
+      
+      return doc.exists;
     } else {
-      // Mobile/Desktop implementation
+      // MOBILE: Check in SQLite
       final db = await database;
       final results = await db.query(
         'user_charity_preferences',

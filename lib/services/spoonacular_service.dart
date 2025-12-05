@@ -6,8 +6,7 @@ import 'package:http/http.dart' as http;
 
 class SpoonacularService {
   // Replace with your actual Spoonacular API key
-  // Get your API key from: https://spoonacular.com/food-api
-  static const String _apiKey = '3f09b6988a024610af31c558ba67af1f';
+  static const String _apiKey = 'ae4fe43e5d144a2385b1d5d9814ccbfb';
   static const String _baseURL = 'api.spoonacular.com';
 
   SpoonacularService._();

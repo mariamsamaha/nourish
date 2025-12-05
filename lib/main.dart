@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:proj/services/firestore_service.dart';
 import 'package:proj/services/auth_service.dart';
 import 'package:proj/services/database_service.dart';
+import 'package:proj/services/data_seeder.dart';
 import 'package:camera/camera.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:proj/screens/camera_screen.dart';
@@ -20,11 +21,18 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase
-  // Note: This requires running `flutterfire configure` first to generate firebase_options.dart
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    print('✅ Firebase initialized successfully');
+    
+    // Auto-seed database with Egyptian data
+    try {
+      await DataSeeder.seed();
+    } catch (e) {
+      print('⚠️  Seeding skipped or failed: $e');
+    }
   } catch (e) {
     print('Firebase initialization failed (expected if not configured): $e');
   }
