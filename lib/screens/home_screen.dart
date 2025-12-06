@@ -230,13 +230,6 @@ class _HomeScreenState extends State<HomeScreen> {
         currentIndex: _currentIndex,
         onTap: _onNavTap,
       ),
-      // TEMPORARY: Fix button to update restaurants to Egypt
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => updateRestaurantsToEgypt(context),
-        backgroundColor: Colors.orange,
-        icon: const Icon(Icons.location_city),
-        label: const Text('Fix Egypt Locations'),
-      ),
     );
   }
 }

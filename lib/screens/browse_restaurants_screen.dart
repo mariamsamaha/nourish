@@ -204,33 +204,6 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
               ),
             ),
 
-          if (!_isLoadingLocation &&
-              _locationError == null &&
-              _locationService.isLocationEnabled)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: Colors.green.shade50,
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.location_on,
-                    color: Colors.green.shade700,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Location enabled - showing distances',
-                    style: TextStyle(
-                      color: Colors.green.shade700,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
