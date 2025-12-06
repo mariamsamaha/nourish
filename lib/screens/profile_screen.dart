@@ -674,12 +674,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       background: Colors.green.shade50,
                       iconColor: Colors.green.shade700,
                     ),
-                    SectionItem(
-                      icon: Icons.camera_alt,
-                      label: 'Scan Food',
-                      background: Colors.purple.shade50,
-                      iconColor: Colors.purple.shade600,
-                    ),
                   ],
                   onTap: (index) {
                     if (index == 0) {
@@ -687,8 +681,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     } else if (index == 1) {
                       // Navigate to AI Chat Support
                       Navigator.pushNamed(context, AppRoutes.chatSupport);
-                    } else if (index == 2) {
-                      _showImageSourceSelection(context);
                     }
                   },
                 ),
@@ -801,8 +793,8 @@ class _ProfileHeader extends StatefulWidget {
 class _ProfileHeaderState extends State<_ProfileHeader> {
   String _userEmail = 'Loading...';
   String _userName = 'User';
-  File? _profileImageFile; // Temporary during selection
-  String? _profileImageBase64; // Stored in database
+  File? _profileImageFile;
+  String? _profileImageBase64;
   bool _isUploading = false;
 
   final _picker = ImagePicker();

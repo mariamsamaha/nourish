@@ -42,13 +42,23 @@ jobs:
         run: dart format --output=none --set-exit-if-changed .
 
       - name: Static analysis
-        run: flutter analyze --no-fatal-infos || exit 0
+        run: flutter analyze --no-fatal-infos
 
-      - name: Run tests (unit + widget) with coverage
+      - name: Run all tests with coverage
+        run: flutter test --coverage
+
+      - name: Verify coverage file exists
         run: |
-          flutter test test/payment_link_handler_test.dart --coverage
-          # ensure lcov exists
-          if [ ! -f coverage/lcov.info ]; then echo "lcov not found"; fi
+          if [ ! -f coverage/lcov.info ]; then 
+            echo "❌ Coverage file not found - tests may not have run correctly"
+            exit 1
+          fi
+          echo "✅ Coverage file generated successfully"
+          
+      - name: Display test summary
+        run: |
+          echo "📊 Test Coverage Summary:"
+          echo "Tests completed successfully"
 
       - name: Build debug APK (sanity)
         run: flutter build apk --debug --no-shrink
