@@ -362,7 +362,7 @@ For questions or issues:
 
 ## 📄 License
 
-This project is part of a mobile development course at [University Name].
+This project is part of a mobile development course at Zewail city of science and technology .
 
 **Version:** 1.0.0  
 **Last Updated:** 2025-12-06
