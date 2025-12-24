@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:proj/widgets/scale_button.dart';
 import 'package:provider/provider.dart';
 import 'package:proj/services/auth_service.dart';
 import 'package:proj/services/database_service.dart';
@@ -128,31 +129,37 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
 
               // Food Image/Icon
               Center(
-                child: Container(
-                  width: width * 0.3,
-                  height: width * 0.3,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                    image: imageUrl.isNotEmpty
-                        ? DecorationImage(
-                            image: NetworkImage(imageUrl),
-                            fit: BoxFit.cover,
+                child: Hero(
+                  tag: 'food_image_${args?['id'] ?? name}',
+                  child: Container(
+                    width: width * 0.3,
+                    height: width * 0.3,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                      image: imageUrl.isNotEmpty
+                          ? DecorationImage(
+                              image: NetworkImage(imageUrl),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
+                    ),
+                    child: imageUrl.isEmpty
+                        ? const Center(
+                            child: Material(
+                              color: Colors.transparent,
+                              child: Text('🥐', style: TextStyle(fontSize: 80)),
+                            ),
                           )
                         : null,
                   ),
-                  child: imageUrl.isEmpty
-                      ? const Center(
-                          child: Text('🥐', style: TextStyle(fontSize: 80)),
-                        )
-                      : null,
                 ),
               ),
 
@@ -379,34 +386,39 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                     SizedBox(
                       width: double.infinity,
                       height: height * 0.065,
-                      child: ElevatedButton(
+                      child: ScaleButton(
                         onPressed: _isAddingToCart
                             ? null
                             : () => _addToCart(context, args),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4CAF50),
-                          disabledBackgroundColor: Colors.grey.shade400,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                        child: AbsorbPointer(
+                          child: ElevatedButton(
+                            onPressed: () {}, // Dummy to maintain enabled style
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF4CAF50),
+                              disabledBackgroundColor: Colors.grey.shade400,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: _isAddingToCart
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Add to Cart',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                           ),
                         ),
-                        child: _isAddingToCart
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text(
-                                'Add to Cart',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
                       ),
                     ),
 

@@ -7,6 +7,8 @@ import 'package:proj/routes/app_routes.dart';
 import 'package:proj/services/firestore_service.dart';
 import 'package:proj/models/food_item_model.dart';
 import 'package:proj/utils/update_restaurants_egypt.dart';
+import 'package:proj/widgets/animated_slide_in.dart';
+import 'package:proj/widgets/animated_fade_in.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -57,6 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
+                  key: const ValueKey('home_scroll_column'),
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Search Bar
@@ -105,12 +108,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            "Best Offers",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+                          const AnimatedFadeIn(
+                            child: Text(
+                              "Best Offers",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
                             ),
                           ),
                           Text(
@@ -173,9 +178,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             );
                           }
-
                           return Column(
-                            children: filteredItems.map((item) {
+                            key: const ValueKey('best_offers_list'),
+                            children: filteredItems.asMap().entries.map((entry) {
+                              final index = entry.key;
+                              final item = entry.value;
+
                               // Calculate discount percent
                               final discount =
                                   ((item.originalPrice - item.price) /
@@ -183,34 +191,37 @@ class _HomeScreenState extends State<HomeScreen> {
                                           100)
                                       .round();
 
-                              return OfferCard(
-                                title: item.name,
-                                storeName: item.restaurantName ?? "Restaurant",
-                                distance: "0.5 mi", // TODO: Calculate distance
-                                originalPrice:
-                                    "\$${item.originalPrice.toStringAsFixed(2)}",
-                                discountedPrice:
-                                    "\$${item.price.toStringAsFixed(2)}",
-                                pickupTime: item.pickupTime,
-                                quantityLeft: "${item.quantity} left",
-                                imageColor:
-                                    Colors.orange.shade400, // Placeholder
-                                icon: Icons.bakery_dining, // Placeholder
-                                discountPercent: "$discount% OFF",
-                                restaurantId: item.restaurantId,
-                                restaurantName: item.restaurantName,
-                                foodItemData: {
-                                  'id': item.id,
-                                  'name': item.name,
-                                  'price': item.price,
-                                  'originalPrice': item.originalPrice,
-                                  'quantity': item.quantity,
-                                  'pickupTime': item.pickupTime,
-                                  'imageUrl': item.imageUrl,
-                                  'allergens': item.allergens,
-                                  'restaurantId': item.restaurantId,
-                                  'restaurantName': item.restaurantName,
-                                },
+                              return AnimatedSlideIn(
+                                delay: Duration(milliseconds: 100 * index),
+                                child: OfferCard(
+                                  title: item.name,
+                                  storeName: item.restaurantName ?? "Restaurant",
+                                  distance: "0.5 mi", // TODO: Calculate distance
+                                  originalPrice:
+                                      "\$${item.originalPrice.toStringAsFixed(2)}",
+                                  discountedPrice:
+                                      "\$${item.price.toStringAsFixed(2)}",
+                                  pickupTime: item.pickupTime,
+                                  quantityLeft: "${item.quantity} left",
+                                  imageColor:
+                                      Colors.orange.shade400, // Placeholder
+                                  icon: Icons.bakery_dining, // Placeholder
+                                  discountPercent: "$discount% OFF",
+                                  restaurantId: item.restaurantId,
+                                  restaurantName: item.restaurantName,
+                                  foodItemData: {
+                                    'id': item.id,
+                                    'name': item.name,
+                                    'price': item.price,
+                                    'originalPrice': item.originalPrice,
+                                    'quantity': item.quantity,
+                                    'pickupTime': item.pickupTime,
+                                    'imageUrl': item.imageUrl,
+                                    'allergens': item.allergens,
+                                    'restaurantId': item.restaurantId,
+                                    'restaurantName': item.restaurantName,
+                                  },
+                                ),
                               );
                             }).toList(),
                           );

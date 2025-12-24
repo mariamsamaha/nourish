@@ -1,3 +1,8 @@
+import 'package:proj/widgets/animated_slide_in.dart';
+import 'package:proj/widgets/animated_fade_in.dart';
+import 'package:proj/widgets/scale_button.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
@@ -105,12 +110,14 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Browse',
-              style: TextStyle(
-                color: Color(0xFF1B5E20),
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
+            const AnimatedFadeIn(
+              child: Text(
+                'Browse',
+                style: TextStyle(
+                  color: Color(0xFF1B5E20),
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             // Show current location city name
@@ -346,23 +353,26 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
                   itemBuilder: (context, index) {
                     final item = filteredRestaurants[index];
                     final restaurant = item.restaurant;
-                    return Column(
-                      children: [
-                        _buildRestaurantCard(
-                          restaurant.id,
-                          'Available',
-                          restaurant.name,
-                          restaurant.rating,
-                          restaurant.reviews,
-                          item.distance,
-                          restaurant.tags,
-                          'Pick up today',
-                          restaurant.imageUrl,
-                          restaurant.hasDelivery,
-                          restaurant.hasPickup,
-                        ),
-                        const SizedBox(height: 16),
-                      ],
+                    return AnimatedSlideIn(
+                      delay: Duration(milliseconds: 100 * index),
+                      child: Column(
+                        children: [
+                          _buildRestaurantCard(
+                            restaurant.id,
+                            'Available',
+                            restaurant.name,
+                            restaurant.rating,
+                            restaurant.reviews,
+                            item.distance,
+                            restaurant.tags,
+                            'Pick up today',
+                            restaurant.imageUrl,
+                            restaurant.hasDelivery,
+                            restaurant.hasPickup,
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      ),
                     );
                   },
                 );
@@ -381,8 +391,8 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
   Widget _buildTab(String text, int index) {
     final bool isSelected = _selectedTab == index;
     return Expanded(
-      child: GestureDetector(
-        onTap: () {
+      child: ScaleButton(
+        onPressed: () {
           setState(() {
             _selectedTab = index;
           });
@@ -419,20 +429,15 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
     bool hasDelivery,
     bool hasPickup,
   ) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pushNamed(
-          context,
-          AppRoutes.restaurantDetail,
-          arguments: {
-            'id': id,
-            'name': name,
-            'rating': rating,
-            'reviews': reviews,
-            'tags': tags,
-            'image': imageUrl,
-          },
-        );
+    return _InteractiveRestaurantCard(
+      restaurantId: id,
+      restaurantData: {
+        'id': id,
+        'name': name,
+        'rating': rating,
+        'reviews': reviews,
+        'tags': tags,
+        'image': imageUrl,
       },
       child: Container(
         decoration: BoxDecoration(
@@ -458,20 +463,23 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
               ),
               child: Stack(
                 children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(12),
-                    ),
-                    child: Image.network(
-                      imageUrl,
-                      width: double.infinity,
-                      height: 200,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Center(
-                        child: Icon(
-                          Icons.restaurant,
-                          size: 80,
-                          color: Color(0xFF4CAF50),
+                  Hero(
+                    tag: 'restaurant_image_$id',
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(12),
+                      ),
+                      child: Image.network(
+                        imageUrl,
+                        width: double.infinity,
+                        height: 200,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Center(
+                          child: Icon(
+                            Icons.restaurant,
+                            size: 80,
+                            color: Color(0xFF4CAF50),
+                          ),
                         ),
                       ),
                     ),
@@ -639,6 +647,66 @@ class _BrowseRestaurantsScreenState extends State<BrowseRestaurantsScreen> {
         ),
       ),
     );
+  }
+}
+
+class _InteractiveRestaurantCard extends StatefulWidget {
+  final Widget child;
+  final String restaurantId;
+  final Map<String, dynamic> restaurantData;
+
+  const _InteractiveRestaurantCard({
+    required this.child,
+    required this.restaurantId,
+    required this.restaurantData,
+  });
+
+  @override
+  State<_InteractiveRestaurantCard> createState() =>
+      _InteractiveRestaurantCardState();
+}
+
+class _InteractiveRestaurantCardState
+    extends State<_InteractiveRestaurantCard> {
+  bool _isHovered = false;
+  double _scale = 1.0;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget card = GestureDetector(
+      onTapDown: (_) => setState(() => _scale = 0.98),
+      onTapUp: (_) => setState(() => _scale = 1.0),
+      onTapCancel: () => setState(() => _scale = 1.0),
+      onTap: () {
+        Navigator.pushNamed(
+          context,
+          AppRoutes.restaurantDetail,
+          arguments: widget.restaurantData,
+        );
+      },
+      child: AnimatedScale(
+        scale: _scale,
+        duration: const Duration(milliseconds: 100),
+        child: widget.child,
+      ),
+    );
+
+    if (kIsWeb) {
+      return MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        cursor: SystemMouseCursors.click,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          transform: _isHovered
+              ? (Matrix4.identity()..scale(1.02, 1.02))
+              : Matrix4.identity(),
+          child: card,
+        ),
+      );
+    }
+
+    return card;
   }
 }
 

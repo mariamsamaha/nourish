@@ -16,6 +16,7 @@ import 'package:proj/screens/food_detection_results_screen.dart';
 import 'package:proj/middleware/auth_guard.dart';
 import 'package:proj/screens/paymob_success_screen.dart';
 import 'package:proj/screens/chat_support_screen.dart';
+import 'package:proj/screens/splash_screen.dart';
 
 class AppRoutes {
   static const String welcome = '/';
@@ -33,9 +34,11 @@ class AppRoutes {
   static const String foodDetectionResults = '/food_detection_results';
   static const String paymobSuccess = '/paymob-success';
   static const String chatSupport = '/chat-support';
+  static const String splash = '/splash';
 
   static Map<String, WidgetBuilder> routes = {
     // Public routes (no auth required)
+    splash: (context) => const SplashScreen(),
     welcome: (context) => const WelcomeScreen(),
     signup: (context) => const CreateAccountScreen(),
     signin: (context) => const SignInScreen(),

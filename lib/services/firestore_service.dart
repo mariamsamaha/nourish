@@ -107,7 +107,7 @@ class FirestoreService {
     });
   }
 
-  // ========== PROFILE IMAGE METHODS (SQLLITE + FIRESTORE) ==========
+  // ========== PROFILE IMAGE METHODS (SQLITE + FIRESTORE) ==========
 
   /// Save profile image (SQLite on mobile, Firestore on web)
   Future<void> saveProfileImageDual({
@@ -119,18 +119,22 @@ class FirestoreService {
       final base64Image = base64Encode(imageBytes);
       print('💾 Saving image: ${base64Image.length} chars');
 
-      if (kIsWeb) {
-        // WEB: Save to Firestore (persists across browsers)
-        print('🌐 Web: Saving to Firestore');
+      // Always save to Firestore (if online)
+      print('🌐 Saving to Firestore for backup');
+      try {
         await _db.collection('userImages').doc(userId).set({
           'userId': userId,
           'email': userEmail,
           'imageBase64': base64Image,
           'updatedAt': FieldValue.serverTimestamp(),
-        });
+        }).timeout(const Duration(seconds: 5));
         print('✅ Saved to Firestore');
-      } else {
-        // MOBILE: Save to SQLite
+      } catch (e) {
+        print('⚠️ Firestore backup failed (probably offline): $e');
+      }
+
+      if (!kIsWeb) {
+        // MOBILE: Also save to SQLite for instant local access
         print('📱 Mobile: Saving to SQLite');
         final dbService = DatabaseService();
         await dbService.saveProfileImage(
@@ -151,26 +155,50 @@ class FirestoreService {
     try {
       print('🔍 Loading image for user: $userId');
 
-      if (kIsWeb) {
-        // WEB: Load from Firestore
-        print('🌐 Web: Loading from Firestore');
-        final doc = await _db.collection('userImages').doc(userId).get();
+      // 1. Try Firestore First (if online)
+      try {
+        print('🌐 Attempting to load from Firestore');
+        final doc = await _db
+            .collection('userImages')
+            .doc(userId)
+            .get()
+            .timeout(const Duration(seconds: 3));
         if (doc.exists) {
           final base64 = doc.data()?['imageBase64'] as String?;
-          print('✅ Found in Firestore');
-          return base64;
+          if (base64 != null) {
+            print('✅ Found in Firestore');
+            // Cache it locally on mobile
+            if (!kIsWeb) {
+              final dbService = DatabaseService();
+              final email = doc.data()?['email'] as String? ?? '';
+              await dbService.saveProfileImage(
+                userId: userId,
+                userEmail: email,
+                imageBase64: base64,
+              );
+              print('💾 Cached Firestore image locally to SQLite');
+            }
+            return base64;
+          }
         }
-        print('⚠️ Not found in Firestore');
-        return null;
+      } catch (e) {
+        print('⚠️ Firestore load failed (probably offline): $e');
+      }
+
+      // 2. Fallback to Local Storage
+      if (kIsWeb) {
+        // Web SharedPreferences fallback
+        final prefs = await SharedPreferences.getInstance();
+        return prefs.getString('profile_image_$userId');
       } else {
-        // MOBILE: Load from SQLite
-        print('📱 Mobile: Loading from SQLite');
+        // Mobile SQLite fallback
+        print('📱 Mobile: Falling back to SQLite');
         final dbService = DatabaseService();
         final base64 = await dbService.getProfileImage(userId);
         if (base64 != null) {
           print('✅ Found in SQLite');
         } else {
-          print('⚠️ Not found in SQLite');
+          print('⚠️ Not found in SQLite either');
         }
         return base64;
       }
@@ -178,5 +206,122 @@ class FirestoreService {
       print('❌ Load ERROR: $e');
       return null;
     }
+  }
+
+  // ========== FAVORITE RESTAURANTS METHODS (SQLITE + FIRESTORE) ==========
+
+  /// Sync a favorite restaurant to Cloud + Local
+  Future<void> toggleFavoriteDual({
+    required String userId,
+    required String restaurantId,
+    required String restaurantName,
+    required bool isAdding,
+    String? restaurantImage,
+    double? restaurantRating,
+    int? restaurantReviews,
+    List<String>? restaurantTags,
+  }) async {
+    final dbService = DatabaseService();
+
+    if (isAdding) {
+      // ADDING
+      // Save locally first for instant feedback (Mobile)
+      if (!kIsWeb) {
+        await dbService.addFavoriteRestaurant(
+          userId: userId,
+          restaurantId: restaurantId,
+          restaurantName: restaurantName,
+          restaurantImage: restaurantImage,
+          restaurantRating: restaurantRating,
+          restaurantReviews: restaurantReviews,
+          restaurantTags: restaurantTags,
+        );
+      }
+
+      // Sync to Firestore
+      try {
+        await _db
+            .collection('userFavorites')
+            .doc(userId)
+            .collection('restaurants')
+            .doc(restaurantId)
+            .set({
+              'restaurant_id': restaurantId,
+              'restaurant_name': restaurantName,
+              'restaurant_image': restaurantImage,
+              'restaurant_rating': restaurantRating,
+              'restaurant_reviews': restaurantReviews,
+              'restaurant_tags': restaurantTags,
+              'created_at': FieldValue.serverTimestamp(),
+            }).timeout(const Duration(seconds: 5));
+        print('✅ Favorite synced to Firestore');
+      } catch (e) {
+        print('⚠️ Cloud sync failed (offline): $e');
+      }
+    } else {
+      // REMOVING
+      if (!kIsWeb) {
+        await dbService.removeFavoriteRestaurant(
+          userId: userId,
+          restaurantId: restaurantId,
+        );
+      }
+      try {
+        await _db
+            .collection('userFavorites')
+            .doc(userId)
+            .collection('restaurants')
+            .doc(restaurantId)
+            .delete()
+            .timeout(const Duration(seconds: 5));
+        print('✅ Favorite removed from Firestore');
+      } catch (e) {
+        print('⚠️ Cloud sync failed (offline): $e');
+      }
+    }
+  }
+
+  /// Get favorites with cloud-first logic
+  Future<List<Map<String, dynamic>>> getFavoritesDual(String userId) async {
+    final dbService = DatabaseService();
+
+    try {
+      // Try cloud first
+      final snapshot = await _db
+          .collection('userFavorites')
+          .doc(userId)
+          .collection('restaurants')
+          .get()
+          .timeout(const Duration(seconds: 5));
+
+      if (snapshot.docs.isNotEmpty) {
+        final favorites = snapshot.docs.map((doc) {
+          final data = doc.data();
+          return {...data, 'restaurant_id': doc.id};
+        }).toList();
+
+        // Sync local storage with what we found in cloud (Mobile)
+        if (!kIsWeb) {
+          for (var fav in favorites) {
+            final tags = fav['restaurant_tags'] as List<dynamic>?;
+            await dbService.addFavoriteRestaurant(
+              userId: userId,
+              restaurantId: fav['restaurant_id'],
+              restaurantName: fav['restaurant_name'] ?? '',
+              restaurantImage: fav['restaurant_image'],
+              restaurantRating: (fav['restaurant_rating'] as num?)?.toDouble(),
+              restaurantReviews: fav['restaurant_reviews'] as int?,
+              restaurantTags: tags?.map((e) => e.toString()).toList(),
+            );
+          }
+        }
+        return favorites;
+      }
+    } catch (e) {
+      print('⚠️ Cloud favorites fetch failed: $e');
+    }
+
+    // Fallback to local
+    return await dbService.getFavoriteRestaurants(userId);
   }
 }

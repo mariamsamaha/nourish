@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:proj/widgets/animated_slide_in.dart';
+import 'package:proj/widgets/animated_fade_in.dart';
+import 'package:proj/widgets/scale_button.dart';
 import 'package:provider/provider.dart';
 import 'package:proj/routes/app_routes.dart';
 import 'package:proj/services/firestore_service.dart';
@@ -111,7 +114,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          _buildHeader(context, image),
+          _buildHeader(context, image, restaurantId),
           Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -168,19 +171,24 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
               }
 
               return Column(
-                children: items.map((item) {
+                children: items.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final item = entry.value;
                   final discount =
                       ((item.originalPrice - item.price) /
                               item.originalPrice *
                               100)
                           .round();
-                  return Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: 16,
-                      left: 24,
-                      right: 24,
+                  return AnimatedSlideIn(
+                    delay: Duration(milliseconds: (100 * index).toInt()),
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                        bottom: 16,
+                        left: 24,
+                        right: 24,
+                      ),
+                      child: _itemCard(item, discount, context),
                     ),
-                    child: _itemCard(item, discount, context),
                   );
                 }).toList(),
               );
@@ -192,18 +200,26 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, String image) {
+  Widget _buildHeader(BuildContext context, String image, String restaurantId) {
     return Stack(
       children: [
-        Image.network(
-          image,
-          height: 400,
-          width: double.infinity,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Container(
+        Hero(
+          tag: 'restaurant_image_$restaurantId',
+
+          child: Image.network(
+            image,
             height: 400,
-            color: _lightGreen,
-            child: const Icon(Icons.restaurant, size: 100, color: _mediumGreen),
+            width: double.infinity,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Container(
+              height: 400,
+              color: _lightGreen,
+              child: const Icon(
+                Icons.restaurant,
+                size: 100,
+                color: _mediumGreen,
+              ),
+            ),
           ),
         ),
 
@@ -329,18 +345,29 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
         children: [
           Row(
             children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: _lightGreen,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: _mediumGreen.withOpacity(0.2)),
-                ),
-                child: const Icon(
-                  Icons.bakery_dining,
-                  size: 50,
-                  color: _mediumGreen,
+              Hero(
+                tag: 'food_image_${item.id}',
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: _lightGreen,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: _mediumGreen.withOpacity(0.2)),
+                    image: item.imageUrl.isNotEmpty
+                        ? DecorationImage(
+                            image: NetworkImage(item.imageUrl),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                  ),
+                  child: item.imageUrl.isEmpty
+                      ? const Icon(
+                          Icons.bakery_dining,
+                          size: 50,
+                          color: _mediumGreen,
+                        )
+                      : null,
                 ),
               ),
               const SizedBox(width: 16),
@@ -433,11 +460,12 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
 
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
+            child: ScaleButton(
               onPressed: () => Navigator.pushNamed(
                 context,
                 AppRoutes.foodDetails,
                 arguments: {
+                  'id': item.id,
                   'name': item.name,
                   'price': item.price,
                   'originalPrice': item.originalPrice,
@@ -447,25 +475,28 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                   'allergens': item.allergens,
                 },
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: item.quantity > 0
-                    ? _mediumGreen
-                    : Colors.white,
-                foregroundColor: item.quantity > 0
-                    ? Colors.white
-                    : _mediumGreen,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: item.quantity > 0
-                      ? BorderSide.none
-                      : const BorderSide(color: _mediumGreen, width: 2),
+              child: ElevatedButton(
+                onPressed: null, // Handled by ScaleButton
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: item.quantity > 0
+                      ? _mediumGreen
+                      : Colors.white,
+                  foregroundColor: item.quantity > 0
+                      ? Colors.white
+                      : _mediumGreen,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: item.quantity > 0
+                        ? BorderSide.none
+                        : const BorderSide(color: _mediumGreen, width: 2),
+                  ),
+                  elevation: 0,
                 ),
-                elevation: 0,
-              ),
-              child: const Text(
-                'Add to Cart',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                child: const Text(
+                  'Add to Cart',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ),

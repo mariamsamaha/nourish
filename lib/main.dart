@@ -137,8 +137,19 @@ class _MyAppState extends State<MyApp> {
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'Nourish',
-      theme: ThemeData(primarySwatch: Colors.green, fontFamily: 'Arial'),
-      initialRoute: AppRoutes.welcome,
+      theme: ThemeData(
+        primarySwatch: Colors.green,
+        fontFamily: 'Arial',
+        pageTransitionsTheme: PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: _CustomPageTransitionBuilder(),
+            TargetPlatform.iOS: _CustomPageTransitionBuilder(),
+            TargetPlatform.windows: _CustomPageTransitionBuilder(),
+            TargetPlatform.macOS: _CustomPageTransitionBuilder(),
+          },
+        ),
+      ),
+      initialRoute: AppRoutes.splash,
       routes: AppRoutes.routes,
       onGenerateRoute: (settings) {
         // Handle camera route with cameras argument
@@ -149,6 +160,26 @@ class _MyAppState extends State<MyApp> {
         }
         return null;
       },
+    );
+  }
+}
+class _CustomPageTransitionBuilder extends PageTransitionsBuilder {
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(1.0, 0.0),
+        end: Offset.zero,
+      ).animate(
+        CurvedAnimation(parent: animation, curve: Curves.easeInOutQuart),
+      ),
+      child: child,
     );
   }
 }
