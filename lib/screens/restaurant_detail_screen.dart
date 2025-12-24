@@ -378,8 +378,10 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                   children: [
                     Text(
                       item.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 17,
+                        fontSize: 15,
                         fontWeight: FontWeight.bold,
                         color: _green,
                       ),
@@ -387,11 +389,16 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                     const SizedBox(height: 4),
                     Text(
                       'Delicious surprise bag',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
                     ),
                     const SizedBox(height: 8),
 
-                    Row(
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
                           '\$${item.price.toStringAsFixed(2)}',
@@ -401,7 +408,6 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(width: 8),
                         Text(
                           '\$${item.originalPrice.toStringAsFixed(2)}',
                           style: TextStyle(
@@ -410,7 +416,6 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                             decoration: TextDecoration.lineThrough,
                           ),
                         ),
-                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -441,11 +446,15 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                           color: Color(0xFF2E7D32),
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          'Pick up: ${item.pickupTime}',
-                          style: const TextStyle(
-                            color: Color(0xFF2E7D32),
-                            fontSize: 13,
+                        Flexible(
+                          child: Text(
+                            'Pick up: ${item.pickupTime}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Color(0xFF2E7D32),
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                       ],
@@ -476,7 +485,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                 },
               ),
               child: ElevatedButton(
-                onPressed: null, // Handled by ScaleButton
+                onPressed: () {}, // Handled by ScaleButton overlaying this
                 style: ElevatedButton.styleFrom(
                   backgroundColor: item.quantity > 0
                       ? _mediumGreen
