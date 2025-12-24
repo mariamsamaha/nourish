@@ -1,22 +1,46 @@
-import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:proj/services/data_service.dart';
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class AIService {
-  late final GenerativeModel model;
+  final String _apiKey;
+  final String _baseUrl = 'https://api.groq.com/openai/v1';
+  final String _model = 'llama-3.3-70b-versatile';  
   final DataService _dataService = DataService();
 
-  AIService() {
-    final key = dotenv.env['GEMINI_API_KEY']!;
-    model = GenerativeModel(model: 'gemini-2.0-flash', apiKey: key);
-  }
+  AIService() : _apiKey = dotenv.env['GROQ_API_KEY'] ?? '';
 
   /// Basic ask method without context
   Future<String> ask(String prompt) async {
-    final response = await model.generateContent([Content.text(prompt)]);
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/chat/completions'),
+        headers: {
+          'Authorization': 'Bearer $_apiKey',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'model': _model,
+          'messages': [
+            {'role': 'user', 'content': prompt},
+          ],
+          'temperature': 0.7,
+          'max_tokens': 1024,
+        }),
+      );
 
-    return response.text ?? "No response";
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['choices'][0]['message']['content'] ?? 'No response';
+      } else {
+        print('API Error: ${response.statusCode} - ${response.body}');
+        return 'Error: Unable to get response';
+      }
+    } catch (e) {
+      print('Error in ask: $e');
+      return 'Error: $e';
+    }
   }
 
   /// Ask with user context for personalized AI support
@@ -47,8 +71,9 @@ class AIService {
         charities = await _dataService.getCharities();
       }
 
-      // Build context prompt
-      final contextPrompt = _buildContextPrompt(
+      // Build system message and user context
+      final systemMessage = _buildSystemMessage();
+      final userContextMessage = _buildUserContextMessage(
         userContext: userContext,
         restaurants: restaurants,
         meals: meals,
@@ -56,31 +81,42 @@ class AIService {
         userQuestion: userQuestion,
       );
 
-      // Send to AI
-      final response = await model.generateContent([
-        Content.text(contextPrompt),
-      ]);
+      // Send to AI using Groq with proper message structure
+      final response = await http.post(
+        Uri.parse('$_baseUrl/chat/completions'),
+        headers: {
+          'Authorization': 'Bearer $_apiKey',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'model': _model,
+          'messages': [
+            {'role': 'system', 'content': systemMessage},
+            {'role': 'user', 'content': userContextMessage},
+          ],
+          'temperature': 0.7,
+          'max_tokens': 2048,
+        }),
+      );
 
-      return response.text ??
-          "I couldn't generate a response. Please try again.";
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['choices'][0]['message']['content'] ??
+            "I couldn't generate a response. Please try again.";
+      } else {
+        print('API Error: ${response.statusCode} - ${response.body}');
+        return "I couldn't generate a response. Please try again.";
+      }
     } catch (e) {
       print('Error in askWithContext: $e');
       return "I'm having trouble accessing the information right now. Please try again later.";
     }
   }
 
-  /// Build a comprehensive context prompt for the AI
-  String _buildContextPrompt({
-    required Map<String, dynamic> userContext,
-    required List<Map<String, dynamic>> restaurants,
-    required List<Map<String, dynamic>> meals,
-    required List<Map<String, dynamic>> charities,
-    required String userQuestion,
-  }) {
+  /// Build the system message for Nourish AI Support
+  String _buildSystemMessage() {
     final buffer = StringBuffer();
 
-    // Comprehensive system message about Nourish
-    buffer.writeln('=== SYSTEM: YOUR ROLE ===');
     buffer.writeln(
       'You are Nourish AI Support, a friendly and knowledgeable assistant for the Nourish mobile application.',
     );
@@ -129,7 +165,20 @@ class AIService {
     buffer.writeln(
       '• If you don\'t have information, politely say so and suggest alternatives',
     );
-    buffer.writeln('');
+
+    return buffer.toString();
+  }
+
+  /// Build user context message with all relevant data
+  String _buildUserContextMessage({
+    required Map<String, dynamic> userContext,
+    required List<Map<String, dynamic>> restaurants,
+    required List<Map<String, dynamic>> meals,
+    required List<Map<String, dynamic>> charities,
+    required String userQuestion,
+  }) {
+    final buffer = StringBuffer();
+
     buffer.writeln('=== CURRENT USER CONTEXT ===');
 
     // User cart info
