@@ -163,6 +163,7 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
+
 class _CustomPageTransitionBuilder extends PageTransitionsBuilder {
   @override
   Widget buildTransitions<T>(
@@ -173,12 +174,10 @@ class _CustomPageTransitionBuilder extends PageTransitionsBuilder {
     Widget child,
   ) {
     return SlideTransition(
-      position: Tween<Offset>(
-        begin: const Offset(1.0, 0.0),
-        end: Offset.zero,
-      ).animate(
-        CurvedAnimation(parent: animation, curve: Curves.easeInOutQuart),
-      ),
+      position: Tween<Offset>(begin: const Offset(1.0, 0.0), end: Offset.zero)
+          .animate(
+            CurvedAnimation(parent: animation, curve: Curves.easeInOutQuart),
+          ),
       child: child,
     );
   }

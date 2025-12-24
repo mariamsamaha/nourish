@@ -122,12 +122,16 @@ class FirestoreService {
       // Always save to Firestore (if online)
       print('🌐 Saving to Firestore for backup');
       try {
-        await _db.collection('userImages').doc(userId).set({
-          'userId': userId,
-          'email': userEmail,
-          'imageBase64': base64Image,
-          'updatedAt': FieldValue.serverTimestamp(),
-        }).timeout(const Duration(seconds: 5));
+        await _db
+            .collection('userImages')
+            .doc(userId)
+            .set({
+              'userId': userId,
+              'email': userEmail,
+              'imageBase64': base64Image,
+              'updatedAt': FieldValue.serverTimestamp(),
+            })
+            .timeout(const Duration(seconds: 5));
         print('✅ Saved to Firestore');
       } catch (e) {
         print('⚠️ Firestore backup failed (probably offline): $e');
@@ -253,7 +257,8 @@ class FirestoreService {
               'restaurant_reviews': restaurantReviews,
               'restaurant_tags': restaurantTags,
               'created_at': FieldValue.serverTimestamp(),
-            }).timeout(const Duration(seconds: 5));
+            })
+            .timeout(const Duration(seconds: 5));
         print('✅ Favorite synced to Firestore');
       } catch (e) {
         print('⚠️ Cloud sync failed (offline): $e');

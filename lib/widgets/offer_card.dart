@@ -221,10 +221,7 @@ class _InteractiveOfferCard extends StatefulWidget {
   final Widget child;
   final Map<String, dynamic>? foodItemData;
 
-  const _InteractiveOfferCard({
-    required this.child,
-    this.foodItemData,
-  });
+  const _InteractiveOfferCard({required this.child, this.foodItemData});
 
   @override
   State<_InteractiveOfferCard> createState() => _InteractiveOfferCardState();
@@ -275,4 +272,3 @@ class _InteractiveOfferCardState extends State<_InteractiveOfferCard> {
     return card;
   }
 }
-

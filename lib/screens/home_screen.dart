@@ -180,7 +180,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           }
                           return Column(
                             key: const ValueKey('best_offers_list'),
-                            children: filteredItems.asMap().entries.map((entry) {
+                            children: filteredItems.asMap().entries.map((
+                              entry,
+                            ) {
                               final index = entry.key;
                               final item = entry.value;
 
@@ -195,8 +197,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                 delay: Duration(milliseconds: 100 * index),
                                 child: OfferCard(
                                   title: item.name,
-                                  storeName: item.restaurantName ?? "Restaurant",
-                                  distance: "0.5 mi", // TODO: Calculate distance
+                                  storeName:
+                                      item.restaurantName ?? "Restaurant",
+                                  distance:
+                                      "0.5 mi", // TODO: Calculate distance
                                   originalPrice:
                                       "\$${item.originalPrice.toStringAsFixed(2)}",
                                   discountedPrice:
