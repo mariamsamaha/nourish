@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 class AIService {
   final String _apiKey;
   final String _baseUrl = 'https://api.groq.com/openai/v1';
-  final String _model = 'llama-3.3-70b-versatile';  
+  final String _model = 'llama-3.3-70b-versatile';
   final DataService _dataService = DataService();
 
   AIService() : _apiKey = dotenv.env['GROQ_API_KEY'] ?? '';
