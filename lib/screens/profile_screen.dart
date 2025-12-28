@@ -44,8 +44,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (userId == null) return;
 
-    final firestoreService = FirestoreService();
-    final favorites = await firestoreService.getFavoritesDual(userId);
+    final dbService = DatabaseService();
+    final favorites = await dbService.getFavoriteRestaurants(userId);
 
     if (!mounted) return;
 

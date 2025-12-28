@@ -15,6 +15,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Create empty .env file
+        run: echo "GROQ_API_KEY=dummy_key_for_ci" > .env
+
       - name: Setup Java (for Android build)
         uses: actions/setup-java@v4
         with:
